@@ -43,6 +43,7 @@ dark_green_claim_path = image_dir / "dark_green_claim.png"
 machine_advice_path = image_dir / "machine_advice.png"
 machine_claim_loot_path = image_dir / "machine_claim_loot.png"
 quest_advice_path = image_dir / "quest_advice.png"
+quest_weekly_path = image_dir / "quest_weekly.png"
 pickaxe_advice_path = image_dir / "pickaxe_advice.png"
 crystal_advice_path = image_dir / "crystal_advice.png"
 hit_the_crystal_path = image_dir / "hit_the_crystal.png"
@@ -102,7 +103,7 @@ def do_guild_expedition(main_screen):
 
 	time.sleep(0.4)
 	
-	do_something = False
+	did_something = False
 
 	try:
 		click_on_image(green_claim_path)
@@ -111,7 +112,7 @@ def do_guild_expedition(main_screen):
 		logger.debug("No guild expedition to claim")
 	else:
 		logger.info("Guild expedition claimed")
-		do_something = True
+		did_something = True
 
 	try:
 		click_on_image(guild_start_expedition_path)
@@ -119,9 +120,9 @@ def do_guild_expedition(main_screen):
 		logger.debug("No guild expedition to start")
 	else:
 		logger.info("Guild expedition started")
-		do_something = True
+		did_something = True
 
-	if not do_something:
+	if not did_something:
 		logger.error("Failed to claim or start a guild expedition")
 
 	return main_screen
@@ -163,12 +164,36 @@ def do_quest(main_screen):
 
 	time.sleep(0.2)
 
+	did_something = False
+
 	try:
 		click_on_image(green_claim_path)
 	except ImageNotFoundException:
 		logger.debug("No daily quest to claim")
 	else:
 		logger.info("Daily quest claimed")
+		did_something = True
+
+	time.sleep(0.2)
+
+	try:
+		click_on_image(quest_weekly_path)
+	except ImageNotFoundException:
+		logger.error("Failed to find weekly quest button")
+
+	time.sleep(0.2)
+
+	try:
+		click_on_image(green_claim_path)
+	except ImageNotFoundException:
+		logger.debug("No weekly quest to claim")
+	else:
+		logger.info("Weekly quest claimed")
+		did_something = True
+
+
+	if not did_something:
+		logger.error("Failed to claim a daily or weekly quest")
 
 	return main_screen
 
