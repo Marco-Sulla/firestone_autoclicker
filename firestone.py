@@ -277,8 +277,9 @@ def check(main_screen):
     main_screen = do_machine(main_screen)
     main_screen = do_quest(main_screen)
     main_screen = hit_the_crystal(main_screen)
-    main_screen = get_main_screen(main_screen)
     main_screen = get_pickaxes(main_screen, from_advice=True)
+    
+    main_screen = get_main_screen(main_screen)
 
     return main_screen
 
