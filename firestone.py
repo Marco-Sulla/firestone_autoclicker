@@ -51,236 +51,236 @@ hit_the_crystal_path = image_dir / "hit_the_crystal.png"
 main_screen = True
 
 def click_on_image(image):
-	screen = p.screenshot()
-	point = p.locateCenterOnScreen(str(image), confidence=0.9)
-	p.moveTo(*point)
-	time.sleep(0.2)
-	p.click()
+    screen = p.screenshot()
+    point = p.locateCenterOnScreen(str(image), confidence=0.9)
+    p.moveTo(*point)
+    time.sleep(0.2)
+    p.click()
 
 
 def get_main_screen(main_screen):
-	if not main_screen:
-		for _ in range(5):
-			p.press('esc')
+    if not main_screen:
+        for _ in range(5):
+            p.press('esc')
 
-	p.moveTo(home_x + random.randint(0, delta_x), home_y + random.randint(0, delta_y))
+    p.moveTo(home_x + random.randint(0, delta_x), home_y + random.randint(0, delta_y))
 
-	return True
+    return True
 
 
 def do_guild_expedition_2(main_screen):
-	main_screen = get_main_screen(main_screen)
-	
-	try:
-		click_on_image(guild_path)
-	except ImageNotFoundException:
-		pass
-	else:
-		main_screen = False
+    main_screen = get_main_screen(main_screen)
+    
+    try:
+        click_on_image(guild_path)
+    except ImageNotFoundException:
+        pass
+    else:
+        main_screen = False
 
-	time.sleep(0.2)
+    time.sleep(0.2)
 
-	try:
-		click_on_image(guild_expedition_path)
-		time.sleep(0.2)
-		click_on_image(guild_start_expedition_path)
-	except ImageNotFoundException:
-		pass
+    try:
+        click_on_image(guild_expedition_path)
+        time.sleep(0.2)
+        click_on_image(guild_start_expedition_path)
+    except ImageNotFoundException:
+        pass
 
-	return main_screen
+    return main_screen
 
 
 def do_guild_expedition(main_screen):
-	main_screen = get_main_screen(main_screen)
-	
-	try:
-		click_on_image(guild_expedition_advice_path)
-	except ImageNotFoundException:
-		logger.debug("No guild expedition advice")
-		return main_screen
-	else:
-		main_screen = False
+    main_screen = get_main_screen(main_screen)
+    
+    try:
+        click_on_image(guild_expedition_advice_path)
+    except ImageNotFoundException:
+        logger.debug("No guild expedition advice")
+        return main_screen
+    else:
+        main_screen = False
 
-	time.sleep(0.4)
-	
-	did_something = False
+    time.sleep(0.4)
+    
+    did_something = False
 
-	try:
-		click_on_image(green_claim_path)
-		time.sleep(1)
-	except ImageNotFoundException:
-		logger.debug("No guild expedition to claim")
-	else:
-		logger.info("Guild expedition claimed")
-		did_something = True
+    try:
+        click_on_image(green_claim_path)
+        time.sleep(1)
+    except ImageNotFoundException:
+        logger.debug("No guild expedition to claim")
+    else:
+        logger.info("Guild expedition claimed")
+        did_something = True
 
-	try:
-		click_on_image(guild_start_expedition_path)
-	except ImageNotFoundException:
-		logger.debug("No guild expedition to start")
-	else:
-		logger.info("Guild expedition started")
-		did_something = True
+    try:
+        click_on_image(guild_start_expedition_path)
+    except ImageNotFoundException:
+        logger.debug("No guild expedition to start")
+    else:
+        logger.info("Guild expedition started")
+        did_something = True
 
-	if not did_something:
-		logger.error("Failed to claim or start a guild expedition")
+    if not did_something:
+        logger.error("Failed to claim or start a guild expedition")
 
-	return main_screen
+    return main_screen
 
 
 def do_machine(main_screen):
-	main_screen = get_main_screen(main_screen)
-	
-	try:
-		click_on_image(machine_advice_path)
-	except ImageNotFoundException:
-		logger.debug("No machine advice")
-		return main_screen
-	else:
-		main_screen = False
+    main_screen = get_main_screen(main_screen)
+    
+    try:
+        click_on_image(machine_advice_path)
+    except ImageNotFoundException:
+        logger.debug("No machine advice")
+        return main_screen
+    else:
+        main_screen = False
 
-	time.sleep(0.2)
+    time.sleep(0.2)
 
-	try:
-		click_on_image(machine_claim_loot_path)
-	except ImageNotFoundException:
-		logger.debug("No machine loot")
-	else:
-		logger.info("Machine loot claimed")
+    try:
+        click_on_image(machine_claim_loot_path)
+    except ImageNotFoundException:
+        logger.debug("No machine loot")
+    else:
+        logger.info("Machine loot claimed")
 
-	return main_screen
+    return main_screen
 
 
 def do_quest(main_screen):
-	main_screen = get_main_screen(main_screen)
-	
-	try:
-		click_on_image(quest_advice_path)
-	except ImageNotFoundException:
-		logger.debug("No quest advice")
-		return main_screen
-	else:
-		main_screen = False
+    main_screen = get_main_screen(main_screen)
+    
+    try:
+        click_on_image(quest_advice_path)
+    except ImageNotFoundException:
+        logger.debug("No quest advice")
+        return main_screen
+    else:
+        main_screen = False
 
-	time.sleep(0.2)
+    time.sleep(0.2)
 
-	did_something = False
+    did_something = False
 
-	try:
-		click_on_image(green_claim_path)
-	except ImageNotFoundException:
-		logger.debug("No daily quest to claim")
-	else:
-		logger.info("Daily quest claimed")
-		did_something = True
+    try:
+        click_on_image(green_claim_path)
+    except ImageNotFoundException:
+        logger.debug("No daily quest to claim")
+    else:
+        logger.info("Daily quest claimed")
+        did_something = True
 
-	time.sleep(0.2)
+    time.sleep(0.2)
 
-	try:
-		click_on_image(quest_weekly_path)
-	except ImageNotFoundException:
-		logger.error("Failed to find weekly quest button")
+    try:
+        click_on_image(quest_weekly_path)
+    except ImageNotFoundException:
+        logger.error("Failed to find weekly quest button")
 
-	time.sleep(0.2)
+    time.sleep(0.2)
 
-	try:
-		click_on_image(green_claim_path)
-	except ImageNotFoundException:
-		logger.debug("No weekly quest to claim")
-	else:
-		logger.info("Weekly quest claimed")
-		did_something = True
+    try:
+        click_on_image(green_claim_path)
+    except ImageNotFoundException:
+        logger.debug("No weekly quest to claim")
+    else:
+        logger.info("Weekly quest claimed")
+        did_something = True
 
 
-	if not did_something:
-		logger.error("Failed to claim a daily or weekly quest")
+    if not did_something:
+        logger.error("Failed to claim a daily or weekly quest")
 
-	return main_screen
+    return main_screen
 
 
 def get_pickaxes(main_screen, from_advice=False):
-	main_screen = get_main_screen(main_screen)
-	
-	if from_advice:
-		try:
-			click_on_image(pickaxe_advice_path)
-		except ImageNotFoundException:
-			logger.debug("No pickaxe advice")
-			return main_screen
-		else:
-			main_screen = False
-	else:
-		try:
-			click_on_image(guild_path)
-		except ImageNotFoundException:
-			logger.error("Failed to find guild")
-			return main_screen
-		else:
-			main_screen = False
+    main_screen = get_main_screen(main_screen)
+    
+    if from_advice:
+        try:
+            click_on_image(pickaxe_advice_path)
+        except ImageNotFoundException:
+            logger.debug("No pickaxe advice")
+            return main_screen
+        else:
+            main_screen = False
+    else:
+        try:
+            click_on_image(guild_path)
+        except ImageNotFoundException:
+            logger.error("Failed to find guild")
+            return main_screen
+        else:
+            main_screen = False
 
-		time.sleep(0.2)
+        time.sleep(0.2)
 
-		try:
-			click_on_image(guild_shop_path)
-		except ImageNotFoundException:
-			logger.error("Failed to find guild shop")
-			return main_screen
+        try:
+            click_on_image(guild_shop_path)
+        except ImageNotFoundException:
+            logger.error("Failed to find guild shop")
+            return main_screen
 
-		time.sleep(0.2)
+        time.sleep(0.2)
 
-		try:
-			click_on_image(guild_supplies_path)
-		except ImageNotFoundException:
-			logger.error("Failed to find guild supplies")
-			return main_screen
+        try:
+            click_on_image(guild_supplies_path)
+        except ImageNotFoundException:
+            logger.error("Failed to find guild supplies")
+            return main_screen
 
-	time.sleep(0.2)
+    time.sleep(0.2)
 
-	try:
-		click_on_image(dark_green_claim_path)
-	except ImageNotFoundException:
-		logger.error("Failed to get pickaxes")
+    try:
+        click_on_image(dark_green_claim_path)
+    except ImageNotFoundException:
+        logger.error("Failed to get pickaxes")
 
-	return main_screen
+    return main_screen
 
 
 def hit_the_crystal(main_screen):
-	main_screen = get_main_screen(main_screen)
-	
-	try:
-		click_on_image(crystal_advice_path)
-	except ImageNotFoundException:
-		logger.debug("No crystal advice")
-		return main_screen
-	else:
-		main_screen = False
+    main_screen = get_main_screen(main_screen)
+    
+    try:
+        click_on_image(crystal_advice_path)
+    except ImageNotFoundException:
+        logger.debug("No crystal advice")
+        return main_screen
+    else:
+        main_screen = False
 
-	time.sleep(0.2)
-	hits = 1
+    time.sleep(0.2)
+    hits = 1
 
-	while True:
-		try:
-			click_on_image(hit_the_crystal_path)
-			logger.info(f"Hit the crystal number {hits}")
-			time.sleep(2)
-		except ImageNotFoundException:
-			logger.debug("Crystal hit finished")
-			break
+    while True:
+        try:
+            click_on_image(hit_the_crystal_path)
+            logger.info(f"Hit the crystal number {hits}")
+            time.sleep(2)
+        except ImageNotFoundException:
+            logger.debug("Crystal hit finished")
+            break
 
-		hits += 1
+        hits += 1
 
-	return main_screen
+    return main_screen
 
 
 def check(main_screen):
-	main_screen = do_guild_expedition(main_screen)
-	main_screen = do_machine(main_screen)
-	main_screen = do_quest(main_screen)
-	main_screen = hit_the_crystal(main_screen)
-	main_screen = get_main_screen(main_screen)
-	main_screen = get_pickaxes(main_screen, from_advice=True)
+    main_screen = do_guild_expedition(main_screen)
+    main_screen = do_machine(main_screen)
+    main_screen = do_quest(main_screen)
+    main_screen = hit_the_crystal(main_screen)
+    main_screen = get_main_screen(main_screen)
+    main_screen = get_pickaxes(main_screen, from_advice=True)
 
-	return main_screen
+    return main_screen
 
 
 p.keyDown('alt')
@@ -295,12 +295,12 @@ fire_arg = "fire"
 possible_args = (fire_arg, )
 
 try:
-	arg = sys.argv[1]
+    arg = sys.argv[1]
 
-	if arg not in possible_args:
-		raise ValueError(f"argument must be one of this values: {possible_args}")
+    if arg not in possible_args:
+        raise ValueError(f"argument must be one of this values: {possible_args}")
 except IndexError:
-	arg = None
+    arg = None
 
 arg_is_fire = arg == fire_arg
 
@@ -311,15 +311,15 @@ prev_time = time.time() - wait_sec - 2
 prev_time_pickaxes = prev_time
 
 while True:
-	if arg_is_fire:	
-		p.click(interval=0.2)
+    if arg_is_fire:    
+        p.click(interval=0.2)
 
-	curr_time = time.time()
+    curr_time = time.time()
 
-	if curr_time - prev_time_pickaxes >= wait_sec_packaxes:
-		main_screen = get_pickaxes(main_screen)
-		prev_time_pickaxes = time.time()
+    if curr_time - prev_time_pickaxes >= wait_sec_packaxes:
+        main_screen = get_pickaxes(main_screen)
+        prev_time_pickaxes = time.time()
 
-	if curr_time - prev_time >= wait_sec:
-		main_screen = check(main_screen)
-		prev_time = time.time()
+    if curr_time - prev_time >= wait_sec:
+        main_screen = check(main_screen)
+        prev_time = time.time()
