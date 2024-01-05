@@ -198,32 +198,41 @@ def do_quest(main_screen):
 	return main_screen
 
 
-def get_pickaxes(main_screen):
+def get_pickaxes(main_screen, from_advice=False):
 	main_screen = get_main_screen(main_screen)
 	
-	try:
-		click_on_image(guild_path)
-	except ImageNotFoundException:
-		logger.error("Failed to find guild")
-		return main_screen
+	if from_advice:
+		try:
+			click_on_image(pickaxe_advice_path)
+		except ImageNotFoundException:
+			logger.debug("No pickaxe advice")
+			return main_screen
+		else:
+			main_screen = False
 	else:
-		main_screen = False
+		try:
+			click_on_image(guild_path)
+		except ImageNotFoundException:
+			logger.error("Failed to find guild")
+			return main_screen
+		else:
+			main_screen = False
 
-	time.sleep(0.2)
+		time.sleep(0.2)
 
-	try:
-		click_on_image(guild_shop_path)
-	except ImageNotFoundException:
-		logger.error("Failed to find guild shop")
-		return main_screen
+		try:
+			click_on_image(guild_shop_path)
+		except ImageNotFoundException:
+			logger.error("Failed to find guild shop")
+			return main_screen
 
-	time.sleep(0.2)
+		time.sleep(0.2)
 
-	try:
-		click_on_image(guild_supplies_path)
-	except ImageNotFoundException:
-		logger.error("Failed to find guild supplies")
-		return main_screen
+		try:
+			click_on_image(guild_supplies_path)
+		except ImageNotFoundException:
+			logger.error("Failed to find guild supplies")
+			return main_screen
 
 	time.sleep(0.2)
 
@@ -269,6 +278,7 @@ def check(main_screen):
 	main_screen = do_quest(main_screen)
 	main_screen = hit_the_crystal(main_screen)
 	main_screen = get_main_screen(main_screen)
+	main_screen = get_pickaxes(main_screen, from_advice=True)
 
 	return main_screen
 
