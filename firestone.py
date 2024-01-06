@@ -60,12 +60,16 @@ def click_on_image(image):
     p.click()
 
 
-def get_main_screen(main_screen):
+def get_main_screen(main_screen, arg_is_fire):
     if not main_screen:
         for _ in range(5):
             p.press('esc')
 
-    p.moveTo(home_x + random.randint(0, delta_x), home_y + random.randint(0, delta_y))
+    if arg_is_fire:
+        p.moveTo(
+            home_x + random.randint(0, delta_x), 
+            home_y + random.randint(0, delta_y)
+        )
 
     return True
 
@@ -92,8 +96,8 @@ def do_guild_expedition_2(main_screen):
     return main_screen
 
 
-def do_guild_expedition(main_screen):
-    main_screen = get_main_screen(main_screen)
+def do_guild_expedition(main_screen, arg_is_fire):
+    main_screen = get_main_screen(main_screen, arg_is_fire)
     
     try:
         click_on_image(guild_expedition_advice_path)
@@ -130,8 +134,8 @@ def do_guild_expedition(main_screen):
     return main_screen
 
 
-def do_machine(main_screen):
-    main_screen = get_main_screen(main_screen)
+def do_machine(main_screen, arg_is_fire):
+    main_screen = get_main_screen(main_screen, arg_is_fire)
     
     try:
         click_on_image(machine_advice_path)
@@ -153,8 +157,8 @@ def do_machine(main_screen):
     return main_screen
 
 
-def do_quest(main_screen):
-    main_screen = get_main_screen(main_screen)
+def do_quest(main_screen, arg_is_fire):
+    main_screen = get_main_screen(main_screen, arg_is_fire)
     
     try:
         click_on_image(quest_advice_path)
@@ -206,8 +210,8 @@ def do_quest(main_screen):
     return main_screen
 
 
-def get_pickaxes(main_screen, from_advice=False):
-    main_screen = get_main_screen(main_screen)
+def get_pickaxes(main_screen, arg_is_fire, from_advice=False):
+    main_screen = get_main_screen(main_screen, arg_is_fire)
     
     if from_advice:
         try:
@@ -255,8 +259,8 @@ def get_pickaxes(main_screen, from_advice=False):
     return main_screen
 
 
-def hit_the_crystal(main_screen):
-    main_screen = get_main_screen(main_screen)
+def hit_the_crystal(main_screen, arg_is_fire):
+    main_screen = get_main_screen(main_screen, arg_is_fire)
     
     try:
         click_on_image(crystal_advice_path)
@@ -283,14 +287,14 @@ def hit_the_crystal(main_screen):
     return main_screen
 
 
-def check(main_screen):
-    main_screen = do_guild_expedition(main_screen)
-    main_screen = do_machine(main_screen)
-    main_screen = do_quest(main_screen)
-    main_screen = hit_the_crystal(main_screen)
-    main_screen = get_pickaxes(main_screen, from_advice=True)
+def check(main_screen, arg_is_fire):
+    main_screen = do_guild_expedition(main_screen, arg_is_fire)
+    main_screen = do_machine(main_screen, arg_is_fire)
+    main_screen = do_quest(main_screen, arg_is_fire)
+    main_screen = hit_the_crystal(main_screen, arg_is_fire)
+    main_screen = get_pickaxes(main_screen, arg_is_fire, from_advice=True)
     
-    main_screen = get_main_screen(main_screen)
+    main_screen = get_main_screen(main_screen, arg_is_fire)
 
     return main_screen
 
@@ -329,9 +333,9 @@ while True:
     curr_time = time.time()
 
     if curr_time - prev_time_pickaxes >= wait_sec_packaxes:
-        main_screen = get_pickaxes(main_screen)
+        main_screen = get_pickaxes(main_screen, arg_is_fire)
         prev_time_pickaxes = time.time()
 
     if curr_time - prev_time >= wait_sec:
-        main_screen = check(main_screen)
+        main_screen = check(main_screen, arg_is_fire)
         prev_time = time.time()
