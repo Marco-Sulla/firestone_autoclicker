@@ -1,5 +1,6 @@
 import pyautogui as p
 from pyautogui import ImageNotFoundException
+from pyscreeze import ImageNotFoundException as ImageNotFoundException2
 from pathlib import Path
 import time
 import sys
@@ -39,25 +40,53 @@ guild_shop_path = image_dir / "guild_shop.png"
 guild_supplies_path = image_dir / "guild_supplies.png"
 guild_supplies_2_path = image_dir / "guild_supplies_2.png"
 
-green_claim_path = image_dir / "green_claim.png"
-dark_green_claim_path = image_dir / "dark_green_claim.png"
+claim_green_path = image_dir / "claim_green.png"
+claim_dark_green_path = image_dir / "claim_dark_green.png"
+start_path = image_dir / "start.png"
+
 machine_advice_path = image_dir / "machine_advice.png"
 machine_claim_loot_path = image_dir / "machine_claim_loot.png"
+
 quest_advice_path = image_dir / "quest_advice.png"
 quest_daily_path = image_dir / "quest_daily.png"
 quest_weekly_path = image_dir / "quest_weekly.png"
+
 pickaxe_advice_path = image_dir / "pickaxe_advice.png"
+
 crystal_advice_path = image_dir / "crystal_advice.png"
-hit_the_crystal_path = image_dir / "hit_the_crystal.png"
+crystal_hit_path = image_dir / "crystal_hit.png"
+
+map_advice_1_path = image_dir / "map_advice_1.png"
+map_advice_2_path = image_dir / "map_advice_2.png"
+map_advice_3_path = image_dir / "map_advice_3.png"
+map_mission_war_path = image_dir / "map_mission_war.png"
+map_mission_adventure_path = image_dir / "map_mission_adventure.png"
+map_mission_scout_path = image_dir / "map_mission_scout.png"
 
 main_screen = True
 
-def click_on_image(image):
-    screen = p.screenshot()
-    point = p.locateCenterOnScreen(str(image), confidence=0.9)
+
+class MissionNotStarted(Exception):
+    pass
+
+
+def click(point):
     p.moveTo(*point)
     time.sleep(0.2)
     p.click()
+
+
+def click_on_image(image, all=False, confidence=0.9):
+    if all:
+        locations = p.locateAllOnScreen(str(image), confidence=confidence)
+        
+        for location in locations:
+            point = p.center(location)
+            click(point)
+            time.sleep(0.2)
+    else:
+        point = p.locateCenterOnScreen(str(image), confidence=confidence)
+        click(point)
 
 
 def get_main_screen(main_screen, arg_is_fire):
@@ -112,7 +141,7 @@ def do_guild_expedition(main_screen, arg_is_fire):
     did_something = False
 
     try:
-        click_on_image(green_claim_path)
+        click_on_image(claim_green_path)
     except ImageNotFoundException:
         logger.debug("No guild expedition to claim")
     else:
@@ -180,7 +209,7 @@ def do_quest(main_screen, arg_is_fire):
         time.sleep(0.2)
 
         try:
-            click_on_image(green_claim_path)
+            click_on_image(claim_green_path)
         except ImageNotFoundException:
             logger.debug("No daily quest to claim")
         else:
@@ -196,7 +225,7 @@ def do_quest(main_screen, arg_is_fire):
         time.sleep(0.2)
 
         try:
-            click_on_image(green_claim_path)
+            click_on_image(claim_green_path)
         except ImageNotFoundException:
             logger.debug("No weekly quest to claim")
         else:
@@ -252,7 +281,7 @@ def get_pickaxes(main_screen, arg_is_fire, from_advice=False):
     time.sleep(0.2)
 
     try:
-        click_on_image(dark_green_claim_path)
+        click_on_image(claim_dark_green_path)
     except ImageNotFoundException:
         logger.error("Failed to get pickaxes")
 
@@ -275,7 +304,7 @@ def hit_the_crystal(main_screen, arg_is_fire):
 
     while True:
         try:
-            click_on_image(hit_the_crystal_path)
+            click_on_image(crystal_hit_path)
             logger.info(f"Hit the crystal number {hits}")
             time.sleep(2)
         except ImageNotFoundException:
@@ -287,12 +316,91 @@ def hit_the_crystal(main_screen, arg_is_fire):
     return main_screen
 
 
+def do_map_mission(mission_path, mission_type):
+    mission_started = False
+    
+    try:
+        locations = p.locateAllOnScreen(str(mission_path), confidence=0.8)
+        
+        for i, location in enumerate(locations):
+            point = p.center(location)
+            click(point)
+            time.sleep(0.2)
+            
+            try:
+                click_on_image(start_path)
+            except ImageNotFoundException:
+                logger.debug("Can't start the {mission_type} mission")
+                p.press('esc')
+            else:
+                mission_started = True
+                time.sleep(0.2)
+                break
+    except ImageNotFoundException2 as e:
+        logger.debug("No {mission_type} missions")
+    
+    if not mission_started:
+        raise MissionNotStarted(f"Mission of type {mission_type} non started")
+    
+
+
+def do_map(main_screen, arg_is_fire):
+    main_screen = get_main_screen(main_screen, arg_is_fire)
+    
+    try:
+        click_on_image(map_advice_1_path)
+    except ImageNotFoundException:
+        try:
+            click_on_image(map_advice_2_path)
+        except ImageNotFoundException:
+            try:
+                click_on_image(map_advice_3_path)
+            except ImageNotFoundException:
+                logger.debug("No map advice")
+                return main_screen
+            else:
+                main_screen = False
+        else:
+            main_screen = False
+    else:
+        main_screen = False
+
+    time.sleep(0.2)
+    
+    try:
+        locations = p.locateAllOnScreen(str(claim_dark_green_path), confidence=0.9)
+        
+        for i, location in enumerate(locations):
+            point = p.center(location)
+            click(point)
+            time.sleep(0.2)
+    except Exception:
+        logger.debug("No map loot")
+    else:
+        logger.info(f"{i} map loots claimed")
+    
+    try:
+        do_map_mission(map_mission_war_path, "war")
+    except MissionNotStarted:
+        try:
+            do_map_mission(map_mission_scout_path, "scout")
+        except MissionNotStarted:
+            try:
+                do_map_mission(map_mission_adventure_path, "adventure")
+            except MissionNotStarted:
+                logger.debug("No mission can be started")
+
+    return main_screen
+
+
+
 def check(main_screen, arg_is_fire):
     main_screen = do_guild_expedition(main_screen, arg_is_fire)
     main_screen = do_machine(main_screen, arg_is_fire)
     main_screen = do_quest(main_screen, arg_is_fire)
     main_screen = hit_the_crystal(main_screen, arg_is_fire)
     main_screen = get_pickaxes(main_screen, arg_is_fire, from_advice=True)
+    main_screen = do_map(main_screen, arg_is_fire)
     
     main_screen = get_main_screen(main_screen, arg_is_fire)
 
