@@ -37,6 +37,7 @@ guild_expedition_advice_path = image_dir / "guild_expedition_advice.png"
 guild_start_expedition_path = image_dir / "guild_start_expedition.png"
 guild_shop_path = image_dir / "guild_shop.png"
 guild_supplies_path = image_dir / "guild_supplies.png"
+guild_supplies_2_path = image_dir / "guild_supplies_2.png"
 
 green_claim_path = image_dir / "green_claim.png"
 dark_green_claim_path = image_dir / "dark_green_claim.png"
@@ -108,12 +109,12 @@ def do_guild_expedition(main_screen):
 
     try:
         click_on_image(green_claim_path)
-        time.sleep(1)
     except ImageNotFoundException:
         logger.debug("No guild expedition to claim")
     else:
         logger.info("Guild expedition claimed")
         did_something = True
+        time.sleep(1)
 
     try:
         click_on_image(guild_start_expedition_path)
@@ -181,8 +182,7 @@ def do_quest(main_screen):
         else:
             logger.info("Daily quest claimed")
             did_something = True
-
-        time.sleep(0.2)
+            time.sleep(2)
 
     try:
         click_on_image(quest_weekly_path)
@@ -239,8 +239,11 @@ def get_pickaxes(main_screen, from_advice=False):
         try:
             click_on_image(guild_supplies_path)
         except ImageNotFoundException:
-            logger.error("Failed to find guild supplies")
-            return main_screen
+            try:
+                p.locateOnScreen(guild_supplies_2_path)
+            except ImageNotFoundException:
+                logger.error("Failed to find guild supplies")
+                return main_screen
 
     time.sleep(0.2)
 
