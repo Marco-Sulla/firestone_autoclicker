@@ -320,7 +320,7 @@ def do_map_mission(mission_path, mission_type):
     mission_started = False
     
     try:
-        locations = p.locateAllOnScreen(str(mission_path), confidence=0.8)
+        locations = p.locateAllOnScreen(str(mission_path), confidence=0.75)
         
         for i, location in enumerate(locations):
             point = p.center(location)
@@ -348,7 +348,7 @@ def do_map(main_screen, arg_is_fire):
     main_screen = get_main_screen(main_screen, arg_is_fire)
     
     try:
-        click_on_image(map_advice_1_path)
+        click_on_image(map_advice_1_path, confidence=0.95)
     except ImageNotFoundException:
         try:
             click_on_image(map_advice_2_path)
@@ -435,9 +435,6 @@ prev_time = time.time() - wait_sec - 2
 prev_time_pickaxes = prev_time
 
 while True:
-    if arg_is_fire:    
-        p.click(interval=0.2)
-
     curr_time = time.time()
 
     if curr_time - prev_time_pickaxes >= wait_sec_packaxes:
@@ -447,3 +444,6 @@ while True:
     if curr_time - prev_time >= wait_sec:
         main_screen = check(main_screen, arg_is_fire)
         prev_time = time.time()
+    
+    if arg_is_fire:    
+        p.click(interval=0.2)
