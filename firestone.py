@@ -32,37 +32,47 @@ home_y = int(coordinates_conf["home_y"])
 delta_x = int(coordinates_conf["delta_x"])
 delta_y = int(coordinates_conf["delta_y"])
 
-guild_path = image_dir / "guild.png"
-guild_expedition_path = image_dir / "guild_expedition.png"
-guild_expedition_advice_path = image_dir / "guild_expedition_advice.png"
-guild_start_expedition_path = image_dir / "guild_start_expedition.png"
-guild_shop_path = image_dir / "guild_shop.png"
-guild_supplies_path = image_dir / "guild_supplies.png"
-guild_supplies_2_path = image_dir / "guild_supplies_2.png"
+image_ext = ".png"
 
-claim_green_path = image_dir / "claim_green.png"
-claim_dark_green_path = image_dir / "claim_dark_green.png"
-start_path = image_dir / "start.png"
+guild_path = image_dir / f"guild{image_ext}"
+guild_expedition_path = image_dir / f"guild_expedition{image_ext}"
+guild_expedition_advice_path = image_dir / f"guild_expedition_advice{image_ext}"
+guild_start_expedition_path = image_dir / f"guild_start_expedition{image_ext}"
+guild_shop_path = image_dir / f"guild_shop{image_ext}"
+guild_supplies_path = image_dir / f"guild_supplies{image_ext}"
+guild_supplies_2_path = image_dir / f"guild_supplies_2{image_ext}"
 
-machine_advice_path = image_dir / "machine_advice.png"
-machine_claim_loot_path = image_dir / "machine_claim_loot.png"
+claim_green_path = image_dir / f"claim_green{image_ext}"
+claim_dark_green_path = image_dir / f"claim_dark_green{image_ext}"
+start_path = image_dir / f"start{image_ext}"
+free_path = image_dir / f"free{image_ext}"
+check_in_path = image_dir / f"check_in{image_ext}"
 
-quest_advice_path = image_dir / "quest_advice.png"
-quest_daily_path = image_dir / "quest_daily.png"
-quest_weekly_path = image_dir / "quest_weekly.png"
+machine_advice_path = image_dir / f"machine_advice{image_ext}"
+machine_claim_loot_path = image_dir / f"machine_claim_loot{image_ext}"
 
-pickaxe_advice_path = image_dir / "pickaxe_advice.png"
+quest_advice_path = image_dir / f"quest_advice{image_ext}"
+quest_daily_path = image_dir / f"quest_daily{image_ext}"
+quest_weekly_path = image_dir / f"quest_weekly{image_ext}"
 
-crystal_advice_path = image_dir / "crystal_advice.png"
-crystal_hit_path = image_dir / "crystal_hit.png"
+pickaxe_advice_path = image_dir / f"pickaxe_advice{image_ext}"
 
-map_advice_1_path = image_dir / "map_advice_1.png"
-map_advice_2_path = image_dir / "map_advice_2.png"
-map_advice_3_path = image_dir / "map_advice_3.png"
-map_mission_war_path = image_dir / "map_mission_war.png"
-map_mission_adventure_path = image_dir / "map_mission_adventure.png"
-map_mission_scout_path = image_dir / "map_mission_scout.png"
-map_mission_monster_path = image_dir / "map_mission_monster.png"
+crystal_advice_path = image_dir / f"crystal_advice{image_ext}"
+crystal_hit_path = image_dir / f"crystal_hit{image_ext}"
+
+map_advice_1_path = image_dir / f"map_advice_1{image_ext}"
+map_advice_2_path = image_dir / f"map_advice_2{image_ext}"
+map_advice_3_path = image_dir / f"map_advice_3{image_ext}"
+map_mission_war_path = image_dir / f"map_mission_war{image_ext}"
+map_mission_adventure_path = image_dir / f"map_mission_adventure{image_ext}"
+map_mission_scout_path = image_dir / f"map_mission_scout{image_ext}"
+map_mission_monster_path = image_dir / f"map_mission_monster{image_ext}"
+
+shop_advice_1_path = image_dir / f"shop_advice_1{image_ext}"
+shop_advice_2_path = image_dir / f"shop_advice_2{image_ext}"
+shop_advice_3_path = image_dir / f"shop_advice_3{image_ext}"
+shop_daily_rewards_path = image_dir / f"shop_daily_rewards{image_ext}"
+
 
 main_screen = True
 
@@ -397,6 +407,51 @@ def do_map(main_screen, arg_is_fire):
     return main_screen
 
 
+def do_shop(main_screen, arg_is_fire):
+    main_screen = get_main_screen(main_screen, arg_is_fire)
+    
+    try:
+        click_on_image(shop_advice_1_path)
+    except ImageNotFoundException:
+        try:
+            click_on_image(shop_advice_2_path)
+        except ImageNotFoundException:
+            try:
+                click_on_image(shop_advice_3_path, confidence=0.98)
+            except ImageNotFoundException:
+                logger.debug("No shop advice")
+                return main_screen
+            else:
+                main_screen = False
+        else:
+            main_screen = False
+    else:
+        main_screen = False
+    
+    time.sleep(0.2)
+
+    try:
+        click_on_image(free_path)
+    except ImageNotFoundException:
+        logger.error("Failed to get shop free gift")
+    
+    time.sleep(0.2)
+    
+    try:
+        click_on_image(shop_daily_rewards_path)
+    except ImageNotFoundException:
+        logger.error("Failed to find daily rewards button")
+        
+        return main_screen
+    
+    try:
+        click_on_image(check_in_path)
+    except ImageNotFoundException:
+        logger.error(
+            "Failed to find daily shop check in daily rewards button"
+        )
+        
+    return main_screen
 
 def check(main_screen, arg_is_fire):
     main_screen = do_guild_expedition(main_screen, arg_is_fire)
@@ -405,6 +460,7 @@ def check(main_screen, arg_is_fire):
     main_screen = hit_the_crystal(main_screen, arg_is_fire)
     main_screen = get_pickaxes(main_screen, arg_is_fire, from_advice=True)
     main_screen = do_map(main_screen, arg_is_fire)
+    main_screen = do_shop(main_screen, arg_is_fire)
     
     main_screen = get_main_screen(main_screen, arg_is_fire)
 
