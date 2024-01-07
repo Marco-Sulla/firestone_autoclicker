@@ -62,6 +62,7 @@ map_advice_3_path = image_dir / "map_advice_3.png"
 map_mission_war_path = image_dir / "map_mission_war.png"
 map_mission_adventure_path = image_dir / "map_mission_adventure.png"
 map_mission_scout_path = image_dir / "map_mission_scout.png"
+map_mission_monster_path = image_dir / "map_mission_monster.png"
 
 main_screen = True
 
@@ -380,15 +381,18 @@ def do_map(main_screen, arg_is_fire):
         logger.info(f"{i} map loots claimed")
     
     try:
-        do_map_mission(map_mission_war_path, "war")
+        do_map_mission(map_mission_monster_path, "monster")
     except MissionNotStarted:
         try:
-            do_map_mission(map_mission_scout_path, "scout")
+            do_map_mission(map_mission_war_path, "war")
         except MissionNotStarted:
             try:
-                do_map_mission(map_mission_adventure_path, "adventure")
+                do_map_mission(map_mission_scout_path, "scout")
             except MissionNotStarted:
-                logger.debug("No mission can be started")
+                try:
+                    do_map_mission(map_mission_adventure_path, "adventure")
+                except MissionNotStarted:
+                    logger.debug("No mission can be started")
 
     return main_screen
 
