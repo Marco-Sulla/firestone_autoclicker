@@ -9,7 +9,7 @@ import random
 import configparser
 
 handler = logging.StreamHandler()
-formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 level = logging.INFO
 logger.setLevel(level)
@@ -25,7 +25,7 @@ ini_path = curr_dir / "firestone.ini"
 config = configparser.ConfigParser()
 config.read(ini_path)
 config.sections()
-coordinates_conf = config['coordinates']
+coordinates_conf = config["coordinates"]
 
 home_x = int(coordinates_conf["home_x"])
 home_y = int(coordinates_conf["home_y"])
@@ -63,6 +63,7 @@ crystal_hit_path = image_dir / f"crystal_hit{image_ext}"
 map_advice_1_path = image_dir / f"map_advice_1{image_ext}"
 map_advice_2_path = image_dir / f"map_advice_2{image_ext}"
 map_advice_3_path = image_dir / f"map_advice_3{image_ext}"
+map_advice_4_path = image_dir / f"map_advice_4{image_ext}"
 map_mission_war_path = image_dir / f"map_mission_war{image_ext}"
 map_mission_adventure_path = image_dir / f"map_mission_adventure{image_ext}"
 map_mission_scout_path = image_dir / f"map_mission_scout{image_ext}"
@@ -103,7 +104,7 @@ def click_on_image(image, all=False, confidence=0.9):
 def get_main_screen(main_screen, arg_is_fire):
     if not main_screen:
         for _ in range(5):
-            p.press('esc')
+            p.press("esc")
 
     if arg_is_fire:
         p.moveTo(
@@ -262,13 +263,21 @@ def get_pickaxes(main_screen, arg_is_fire, from_advice=False):
         else:
             main_screen = False
     else:
-        try:
-            click_on_image(guild_path)
-        except ImageNotFoundException:
+        for _ in range(10):
+            guild_found = False
+            
+            try:
+                click_on_image(guild_path)
+            except ImageNotFoundException:
+                pass
+            else:
+                main_screen = False
+                guild_found = True
+                break
+        
+        if not guild_found:
             logger.error("Failed to find guild")
             return main_screen
-        else:
-            main_screen = False
 
         time.sleep(0.2)
 
@@ -331,7 +340,7 @@ def do_map_mission(mission_path, mission_type):
     mission_started = False
     
     try:
-        locations = p.locateAllOnScreen(str(mission_path), confidence=0.75)
+        locations = p.locateAllOnScreen(str(mission_path), confidence=0.7)
         
         for i, location in enumerate(locations):
             point = p.center(location)
@@ -341,8 +350,8 @@ def do_map_mission(mission_path, mission_type):
             try:
                 click_on_image(start_path)
             except ImageNotFoundException:
-                logger.debug("Can't start the {mission_type} mission")
-                p.press('esc')
+                logger.debug("Failed to start the {mission_type} mission")
+                p.press("esc")
             else:
                 mission_started = True
                 time.sleep(0.2)
@@ -351,7 +360,9 @@ def do_map_mission(mission_path, mission_type):
         logger.debug("No {mission_type} missions")
     
     if not mission_started:
-        raise MissionNotStarted(f"Mission of type {mission_type} non started")
+        raise MissionNotStarted(
+            f"Failed to start mission of type {mission_type}"
+        )
     
 
 
@@ -367,8 +378,13 @@ def do_map(main_screen, arg_is_fire):
             try:
                 click_on_image(map_advice_3_path)
             except ImageNotFoundException:
-                logger.debug("No map advice")
-                return main_screen
+                try:
+                    click_on_image(map_advice_4_path)
+                except ImageNotFoundException:
+                    logger.debug("No map advice")
+                    return main_screen
+                else:
+                    main_screen = False
             else:
                 main_screen = False
         else:
@@ -389,6 +405,8 @@ def do_map(main_screen, arg_is_fire):
         logger.debug("No map loot")
     else:
         logger.info(f"{i} map loots claimed")
+    
+    time.sleep(2)
     
     try:
         do_map_mission(map_mission_monster_path, "monster")
@@ -411,10 +429,10 @@ def do_shop(main_screen, arg_is_fire):
     main_screen = get_main_screen(main_screen, arg_is_fire)
     
     try:
-        click_on_image(shop_advice_1_path)
+        click_on_image(shop_advice_1_path, confidence=0.95)
     except ImageNotFoundException:
         try:
-            click_on_image(shop_advice_2_path)
+            click_on_image(shop_advice_2_path, confidence=0.95)
         except ImageNotFoundException:
             try:
                 click_on_image(shop_advice_3_path, confidence=0.98)
@@ -467,11 +485,11 @@ def check(main_screen, arg_is_fire):
     return main_screen
 
 
-p.keyDown('alt')
+p.keyDown("alt")
 time.sleep(0.2)
-p.press('tab')
+p.press("tab")
 time.sleep(0.2)
-p.keyUp('alt')
+p.keyUp("alt")
 
 time.sleep(0.5)
 
