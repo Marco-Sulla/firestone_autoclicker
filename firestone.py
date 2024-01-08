@@ -313,7 +313,7 @@ def get_pickaxes(main_screen, arg_is_fire, from_advice=False):
     time.sleep(0.2)
 
     try:
-        click_on_image(claim_dark_green_2_path)
+        click_on_image(claim_dark_green_2_path, confidence=0.8)
     except ImageNotFoundException:
         logger.error("Failed to get pickaxes")
 
