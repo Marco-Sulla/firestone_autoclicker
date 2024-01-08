@@ -36,7 +36,12 @@ image_ext = ".png"
 
 guild_path = image_dir / f"guild{image_ext}"
 guild_expedition_path = image_dir / f"guild_expedition{image_ext}"
-guild_expedition_advice_path = image_dir / f"guild_expedition_advice{image_ext}"
+
+guild_expedition_advice_path = (
+    image_dir / 
+    f"guild_expedition_advice{image_ext}"
+)
+
 guild_start_expedition_path = image_dir / f"guild_start_expedition{image_ext}"
 guild_shop_path = image_dir / f"guild_shop{image_ext}"
 guild_supplies_path = image_dir / f"guild_supplies{image_ext}"
@@ -44,9 +49,13 @@ guild_supplies_2_path = image_dir / f"guild_supplies_2{image_ext}"
 
 claim_green_path = image_dir / f"claim_green{image_ext}"
 claim_dark_green_path = image_dir / f"claim_dark_green{image_ext}"
+claim_dark_green_2_path = image_dir / f"claim_dark_green_2{image_ext}"
 start_path = image_dir / f"start{image_ext}"
 free_path = image_dir / f"free{image_ext}"
 check_in_path = image_dir / f"check_in{image_ext}"
+n1500_path = image_dir / f"1500{image_ext}"
+n5_path = image_dir / f"5{image_ext}"
+n5_red_path = image_dir / f"5_red{image_ext}"
 
 machine_advice_path = image_dir / f"machine_advice{image_ext}"
 machine_claim_loot_path = image_dir / f"machine_claim_loot{image_ext}"
@@ -64,6 +73,7 @@ map_advice_1_path = image_dir / f"map_advice_1{image_ext}"
 map_advice_2_path = image_dir / f"map_advice_2{image_ext}"
 map_advice_3_path = image_dir / f"map_advice_3{image_ext}"
 map_advice_4_path = image_dir / f"map_advice_4{image_ext}"
+map_advice_5_path = image_dir / f"map_advice_5{image_ext}"
 map_mission_war_path = image_dir / f"map_mission_war{image_ext}"
 map_mission_adventure_path = image_dir / f"map_mission_adventure{image_ext}"
 map_mission_scout_path = image_dir / f"map_mission_scout{image_ext}"
@@ -73,6 +83,8 @@ shop_advice_1_path = image_dir / f"shop_advice_1{image_ext}"
 shop_advice_2_path = image_dir / f"shop_advice_2{image_ext}"
 shop_advice_3_path = image_dir / f"shop_advice_3{image_ext}"
 shop_daily_rewards_path = image_dir / f"shop_daily_rewards{image_ext}"
+
+tavern_advice_path = image_dir / f"tavern_advice{image_ext}"
 
 
 main_screen = True
@@ -179,7 +191,7 @@ def do_machine(main_screen, arg_is_fire):
     main_screen = get_main_screen(main_screen, arg_is_fire)
     
     try:
-        click_on_image(machine_advice_path)
+        click_on_image(machine_advice_path, confidence=0.8)
     except ImageNotFoundException:
         logger.debug("No machine advice")
         return main_screen
@@ -269,7 +281,7 @@ def get_pickaxes(main_screen, arg_is_fire, from_advice=False):
             try:
                 click_on_image(guild_path)
             except ImageNotFoundException:
-                pass
+                time.sleep(0.5)
             else:
                 main_screen = False
                 guild_found = True
@@ -301,7 +313,7 @@ def get_pickaxes(main_screen, arg_is_fire, from_advice=False):
     time.sleep(0.2)
 
     try:
-        click_on_image(claim_dark_green_path)
+        click_on_image(claim_dark_green_2_path)
     except ImageNotFoundException:
         logger.error("Failed to get pickaxes")
 
@@ -326,7 +338,7 @@ def hit_the_crystal(main_screen, arg_is_fire):
         try:
             click_on_image(crystal_hit_path)
             logger.info(f"Hit the crystal number {hits}")
-            time.sleep(2)
+            time.sleep(2.5)
         except ImageNotFoundException:
             logger.debug("Crystal hit finished")
             break
@@ -381,8 +393,13 @@ def do_map(main_screen, arg_is_fire):
                 try:
                     click_on_image(map_advice_4_path)
                 except ImageNotFoundException:
-                    logger.debug("No map advice")
-                    return main_screen
+                    try:
+                        click_on_image(map_advice_5_path)
+                    except ImageNotFoundException:
+                        logger.debug("No map advice")
+                        return main_screen
+                    else:
+                        main_screen = False
                 else:
                     main_screen = False
             else:
@@ -395,7 +412,10 @@ def do_map(main_screen, arg_is_fire):
     time.sleep(0.2)
     
     try:
-        locations = p.locateAllOnScreen(str(claim_dark_green_path), confidence=0.9)
+        locations = p.locateAllOnScreen(
+            str(claim_dark_green_path), 
+            confidence=0.9
+        )
         
         for i, location in enumerate(locations):
             point = p.center(location)
@@ -471,14 +491,57 @@ def do_shop(main_screen, arg_is_fire):
         
     return main_screen
 
+
+def do_tavern(main_screen, arg_is_fire):
+    main_screen = get_main_screen(main_screen, arg_is_fire)
+    
+    try:
+        click_on_image(tavern_advice_path)
+    except ImageNotFoundException:
+        logger.debug("No tavern advice")
+        return main_screen
+    else:
+        main_screen = False
+
+    time.sleep(0.2)
+    
+    try:
+        click_on_image(n1500_path)
+    except ImageNotFoundException:
+        logger.error("Failed to get 5 tavern tokens")
+        return main_screen
+    
+    time.sleep(2)
+    p.press("esc")
+    
+    try:
+        click_on_image(n5_path)
+    except ImageNotFoundException:
+        logger.error("Failed to bet 5 tavern tokens")
+        return main_screen
+    
+    time.sleep(1)
+    
+    try:
+        click_on_image(n5_red_path, confidence=0.8)
+    except ImageNotFoundException:
+        logger.error("Failed to get 5 tavern cards")
+    
+    time.sleep(1)
+    
+    return main_screen
+    
+
+
 def check(main_screen, arg_is_fire):
     main_screen = do_guild_expedition(main_screen, arg_is_fire)
-    main_screen = do_machine(main_screen, arg_is_fire)
+    # main_screen = do_machine(main_screen, arg_is_fire)
     main_screen = do_quest(main_screen, arg_is_fire)
     main_screen = hit_the_crystal(main_screen, arg_is_fire)
     main_screen = get_pickaxes(main_screen, arg_is_fire, from_advice=True)
     main_screen = do_map(main_screen, arg_is_fire)
     main_screen = do_shop(main_screen, arg_is_fire)
+    main_screen = do_tavern(main_screen, arg_is_fire)
     
     main_screen = get_main_screen(main_screen, arg_is_fire)
 
@@ -500,7 +563,9 @@ try:
     arg = sys.argv[1]
 
     if arg not in possible_args:
-        raise ValueError(f"argument must be one of this values: {possible_args}")
+        raise ValueError(
+            f"argument must be one of this values: {possible_args}"
+        )
 except IndexError:
     arg = None
 
