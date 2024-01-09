@@ -414,7 +414,7 @@ def do_map(main_screen, arg_is_fire):
     try:
         locations = p.locateAllOnScreen(
             str(claim_dark_green_path), 
-            confidence=0.9
+            confidence=0.8
         )
         
         for i, location in enumerate(locations):
