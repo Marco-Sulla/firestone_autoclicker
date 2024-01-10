@@ -449,12 +449,15 @@ def do_shop(main_screen, arg_is_fire):
     main_screen = get_main_screen(main_screen, arg_is_fire)
     
     try:
+        logger.debug("Clicking on shop advice 1")
         click_on_image(shop_advice_1_path, confidence=0.95)
     except ImageNotFoundException:
         try:
-            click_on_image(shop_advice_2_path, confidence=0.95)
+            logger.debug("Clicking on shop advice 2")
+            click_on_image(shop_advice_2_path, confidence=0.98)
         except ImageNotFoundException:
             try:
+                logger.debug("Clicking on shop advice 3")
                 click_on_image(shop_advice_3_path, confidence=0.98)
             except ImageNotFoundException:
                 logger.debug("No shop advice")
@@ -527,7 +530,7 @@ def do_tavern(main_screen, arg_is_fire):
     except ImageNotFoundException:
         logger.error("Failed to get 5 tavern cards")
     
-    time.sleep(1)
+    time.sleep(5)
     
     return main_screen
     
