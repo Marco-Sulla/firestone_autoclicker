@@ -35,7 +35,6 @@ delta_y = int(coordinates_conf["delta_y"])
 image_ext = ".png"
 
 guild_path = image_dir / f"guild{image_ext}"
-guild_expedition_path = image_dir / f"guild_expedition{image_ext}"
 
 guild_expedition_advice_path = (
     image_dir / 
@@ -50,6 +49,8 @@ guild_supplies_2_path = image_dir / f"guild_supplies_2{image_ext}"
 claim_green_path = image_dir / f"claim_green{image_ext}"
 claim_dark_green_path = image_dir / f"claim_dark_green{image_ext}"
 claim_dark_green_2_path = image_dir / f"claim_dark_green_2{image_ext}"
+claim_rewards_path = image_dir / f"claim_rewards{image_ext}"
+
 start_path = image_dir / f"start{image_ext}"
 free_path = image_dir / f"free{image_ext}"
 check_in_path = image_dir / f"check_in{image_ext}"
@@ -74,24 +75,25 @@ map_advice_2_path = image_dir / f"map_advice_2{image_ext}"
 map_advice_3_path = image_dir / f"map_advice_3{image_ext}"
 map_advice_4_path = image_dir / f"map_advice_4{image_ext}"
 map_advice_5_path = image_dir / f"map_advice_5{image_ext}"
+map_advice_6_path = image_dir / f"map_advice_6{image_ext}"
+map_advice_7_path = image_dir / f"map_advice_7{image_ext}"
 map_mission_war_path = image_dir / f"map_mission_war{image_ext}"
 map_mission_adventure_path = image_dir / f"map_mission_adventure{image_ext}"
 map_mission_scout_path = image_dir / f"map_mission_scout{image_ext}"
 map_mission_monster_path = image_dir / f"map_mission_monster{image_ext}"
+map_mission_dragon_path = image_dir / f"map_mission_dragon{image_ext}"
 
 shop_advice_1_path = image_dir / f"shop_advice_1{image_ext}"
 shop_advice_2_path = image_dir / f"shop_advice_2{image_ext}"
 shop_advice_3_path = image_dir / f"shop_advice_3{image_ext}"
+shop_advice_4_path = image_dir / f"shop_advice_4{image_ext}"
+shop_advice_5_path = image_dir / f"shop_advice_5{image_ext}"
 shop_daily_rewards_path = image_dir / f"shop_daily_rewards{image_ext}"
 
 tavern_advice_path = image_dir / f"tavern_advice{image_ext}"
 
 
 main_screen = True
-
-
-class MissionNotStarted(Exception):
-    pass
 
 
 def click(point):
@@ -125,28 +127,6 @@ def get_main_screen(main_screen, arg_is_fire):
         )
 
     return True
-
-
-def do_guild_expedition_2(main_screen):
-    main_screen = get_main_screen(main_screen)
-    
-    try:
-        click_on_image(guild_path)
-    except ImageNotFoundException:
-        pass
-    else:
-        main_screen = False
-
-    time.sleep(0.2)
-
-    try:
-        click_on_image(guild_expedition_path)
-        time.sleep(0.2)
-        click_on_image(guild_start_expedition_path)
-    except ImageNotFoundException:
-        pass
-
-    return main_screen
 
 
 def do_guild_expedition(main_screen, arg_is_fire):
@@ -294,7 +274,7 @@ def get_pickaxes(main_screen, arg_is_fire, from_advice=False):
         time.sleep(0.2)
 
         try:
-            click_on_image(guild_shop_path)
+            click_on_image(guild_shop_path, confidence=0.8)
         except ImageNotFoundException:
             logger.error("Failed to find guild shop")
             return main_screen
@@ -316,6 +296,8 @@ def get_pickaxes(main_screen, arg_is_fire, from_advice=False):
         click_on_image(claim_dark_green_2_path, confidence=0.8)
     except ImageNotFoundException:
         logger.error("Failed to get pickaxes")
+    else:
+        logger.info("Piackaxes claimed")
 
     return main_screen
 
@@ -338,9 +320,9 @@ def hit_the_crystal(main_screen, arg_is_fire):
         try:
             click_on_image(crystal_hit_path)
             logger.info(f"Hit the crystal number {hits}")
-            time.sleep(2.5)
+            time.sleep(3)
         except ImageNotFoundException:
-            logger.debug("Crystal hit finished")
+            logger.info("Crystal hit finished")
             break
 
         hits += 1
@@ -362,19 +344,17 @@ def do_map_mission(mission_path, mission_type):
             try:
                 click_on_image(start_path)
             except ImageNotFoundException:
-                logger.debug("Failed to start the {mission_type} mission")
+                logger.debug(f"Failed to start the {mission_type} mission")
                 p.press("esc")
             else:
+                logger.info(f"Mission of type {mission_type} started")
                 mission_started = True
                 time.sleep(0.2)
-                break
     except ImageNotFoundException2 as e:
         logger.debug("No {mission_type} missions")
     
     if not mission_started:
-        raise MissionNotStarted(
-            f"Failed to start mission of type {mission_type}"
-        )
+        logger.debug(f"Failed to start any mission of type {mission_type}")
     
 
 
@@ -396,8 +376,18 @@ def do_map(main_screen, arg_is_fire):
                     try:
                         click_on_image(map_advice_5_path)
                     except ImageNotFoundException:
-                        logger.debug("No map advice")
-                        return main_screen
+                        try:
+                            click_on_image(map_advice_6_path)
+                        except ImageNotFoundException:
+                            try:
+                                click_on_image(map_advice_7_path)
+                            except ImageNotFoundException:
+                                logger.debug("No map advice")
+                                return main_screen
+                            else:
+                                main_screen = False
+                        else:
+                            main_screen = False
                     else:
                         main_screen = False
                 else:
@@ -411,36 +401,35 @@ def do_map(main_screen, arg_is_fire):
 
     time.sleep(0.2)
     
-    try:
-        locations = p.locateAllOnScreen(
-            str(claim_dark_green_path), 
-            confidence=0.8
-        )
+    
+    i = 0
+    
+    while True:
+        try:
+            click_on_image(claim_dark_green_path, confidence=0.8)
+        except ImageNotFoundException:
+            break
         
-        for i, location in enumerate(locations):
-            point = p.center(location)
-            click(point)
-            time.sleep(0.2)
-    except Exception:
-        logger.debug("No map loot")
-    else:
-        logger.info(f"{i} map loots claimed")
+        i += 1
+        
+        time.sleep(2)
+        
+        try:
+            click_on_image(claim_rewards_path, confidence=0.7)
+        except ImageNotFoundException:
+            logger.error("Unable to confirm map reward claim")
+        
+        time.sleep(0.2)
+        
+    logger.info(f"{i} map loots claimed")
     
     time.sleep(2)
     
-    try:
-        do_map_mission(map_mission_monster_path, "monster")
-    except MissionNotStarted:
-        try:
-            do_map_mission(map_mission_war_path, "war")
-        except MissionNotStarted:
-            try:
-                do_map_mission(map_mission_scout_path, "scout")
-            except MissionNotStarted:
-                try:
-                    do_map_mission(map_mission_adventure_path, "adventure")
-                except MissionNotStarted:
-                    logger.debug("No mission can be started")
+    do_map_mission(map_mission_monster_path, "monster")
+    do_map_mission(map_mission_war_path, "war")
+    do_map_mission(map_mission_scout_path, "scout")
+    do_map_mission(map_mission_adventure_path, "adventure")
+    do_map_mission(map_mission_dragon_path, "dragon")
 
     return main_screen
 
@@ -460,8 +449,20 @@ def do_shop(main_screen, arg_is_fire):
                 logger.debug("Clicking on shop advice 3")
                 click_on_image(shop_advice_3_path, confidence=0.98)
             except ImageNotFoundException:
-                logger.debug("No shop advice")
-                return main_screen
+                try:
+                    logger.debug("Clicking on shop advice 4")
+                    click_on_image(shop_advice_4_path, confidence=1)
+                except ImageNotFoundException:
+                    try:
+                        logger.debug("Clicking on shop advice 5")
+                        click_on_image(shop_advice_5_path, confidence=0.99)
+                    except ImageNotFoundException:
+                        logger.debug("No shop advice")
+                        return main_screen
+                    else:
+                        main_screen = False
+                else:
+                    main_screen = False
             else:
                 main_screen = False
         else:
@@ -472,18 +473,20 @@ def do_shop(main_screen, arg_is_fire):
     time.sleep(0.2)
 
     try:
-        click_on_image(free_path)
+        click_on_image(free_path, confidence=0.8)
     except ImageNotFoundException:
         logger.error("Failed to get shop free gift")
     
     time.sleep(0.2)
     
     try:
-        click_on_image(shop_daily_rewards_path)
+        click_on_image(shop_daily_rewards_path, confidence=0.8)
     except ImageNotFoundException:
         logger.error("Failed to find daily rewards button")
         
         return main_screen
+    else:
+        logger.info("Claimed daily shop reward")
     
     try:
         click_on_image(check_in_path)
@@ -491,6 +494,8 @@ def do_shop(main_screen, arg_is_fire):
         logger.error(
             "Failed to find daily shop check in daily rewards button"
         )
+    else:
+        logger.info("Claimed weekly shop reward")
         
     return main_screen
 
@@ -506,10 +511,10 @@ def do_tavern(main_screen, arg_is_fire):
     else:
         main_screen = False
 
-    time.sleep(0.2)
+    time.sleep(1)
     
     try:
-        click_on_image(n1500_path)
+        click_on_image(n1500_path, confidence=0.8)
     except ImageNotFoundException:
         logger.error("Failed to get 5 tavern tokens")
         return main_screen
@@ -575,10 +580,11 @@ except IndexError:
 arg_is_fire = arg == fire_arg
 
 wait_sec = 20 if arg_is_fire else 3
-wait_sec_packaxes = 4800
+wait_sec_packaxes = 5737
 
-prev_time = time.time() - wait_sec - 2
-prev_time_pickaxes = prev_time
+now = time.time()
+prev_time = now - wait_sec - 2
+prev_time_pickaxes = now - wait_sec_packaxes - 2
 
 while True:
     curr_time = time.time()
