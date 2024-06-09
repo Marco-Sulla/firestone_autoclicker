@@ -36,6 +36,11 @@ advice_up_y = int(coordinates_conf["advice_up_y"])
 advice_down_x = int(coordinates_conf["advice_down_x"])
 advice_down_y = int(coordinates_conf["advice_down_y"])
 
+center_left_x = int(coordinates_conf["center_left_x"])
+center_left_y = int(coordinates_conf["center_left_y"])
+center_right_x = int(coordinates_conf["center_right_x"])
+center_right_y = int(coordinates_conf["center_right_y"])
+
 image_ext = ".png"
 
 guild_path = image_dir / f"guild{image_ext}"
@@ -62,8 +67,8 @@ claim_map_path = image_dir / f"claim_map{image_ext}"
 
 start_path = image_dir / f"start{image_ext}"
 free_path = image_dir / f"free{image_ext}"
+free_orange_path = image_dir / f"free_orange{image_ext}"
 check_in_path = image_dir / f"check_in{image_ext}"
-n1500_path = image_dir / f"1500{image_ext}"
 n5_path = image_dir / f"5{image_ext}"
 n5_red_path = image_dir / f"5_red{image_ext}"
 manual_path = image_dir / f"manual{image_ext}"
@@ -75,6 +80,7 @@ open_path = image_dir / f"open{image_ext}"
 liberate_path = image_dir / f"liberate{image_ext}"
 ok_path = image_dir / f"ok{image_ext}"
 train_free_path = image_dir / f"train_free{image_ext}"
+get_game_tokens_path = image_dir / f"get_game_tokens{image_ext}"
 
 machine_advice_path = image_dir / f"machine_advice{image_ext}"
 machine_claim_loot_path = image_dir / f"machine_claim_loot{image_ext}"
@@ -112,9 +118,15 @@ shop_advice_3_path = image_dir / f"shop_advice_3{image_ext}"
 shop_advice_4_path = image_dir / f"shop_advice_4{image_ext}"
 shop_advice_5_path = image_dir / f"shop_advice_5{image_ext}"
 shop_advice_6_path = image_dir / f"shop_advice_6{image_ext}"
+shop_advice_7_path = image_dir / f"shop_advice_7{image_ext}"
+shop_advice_8_path = image_dir / f"shop_advice_8{image_ext}"
+shop_advice_9_path = image_dir / f"shop_advice_9{image_ext}"
+shop_advice_10_path = image_dir / f"shop_advice_10{image_ext}"
+shop_advice_11_path = image_dir / f"shop_advice_11{image_ext}"
 shop_daily_rewards_path = image_dir / f"shop_daily_rewards{image_ext}"
 
 tavern_advice_path = image_dir / f"tavern_advice{image_ext}"
+tavern_get_5_tokens_path = image_dir / f"tavern_get_5_tokens{image_ext}"
 
 alchemist_advice_path = image_dir / f"alchemist_advice{image_ext}"
 alchemist_blood_path = image_dir / f"alchemist_blood{image_ext}"
@@ -128,10 +140,13 @@ rituals_path = image_dir / f"rituals{image_ext}"
 oracle_gift_advice_path = image_dir / f"oracle_gift_advice{image_ext}"
 
 
-guardian_advice_1_path = image_dir / f"guardian_advice_1{image_ext}"
+guardian_advice_1_5_path = image_dir / f"guardian_advice_1_5{image_ext}"
+guardian_advice_3_2_path = image_dir / f"guardian_advice_3_2{image_ext}"
 guardian_1_5_path = image_dir / f"guardian_1_5{image_ext}"
 guardian_2_5_path = image_dir / f"guardian_2_5{image_ext}"
 guardian_3_1_path = image_dir / f"guardian_3_1{image_ext}"
+guardian_3_2_path = image_dir / f"guardian_3_2{image_ext}"
+guardian_3_3_path = image_dir / f"guardian_3_3{image_ext}"
 
 main_screen = True
 
@@ -177,6 +192,16 @@ def click_on_image(image, all=False, confidence=0.9):
     else:
         point = p.locateCenterOnScreen(str(image), confidence=confidence)
         click(point)
+    
+def click_on_image_no_exc(*args, **kwargs):
+    res = True
+    
+    try:
+        click_on_image(*args, **kwargs)
+    except ImageNotFoundException:
+        res = False
+    
+    return res
 
 
 def is_main_screen(main_screen=None):
@@ -193,6 +218,23 @@ def is_main_screen(main_screen=None):
     return res
 
 
+def move_random_around_home():
+    p.moveTo(
+        home_x + random.randint(0, delta_x), 
+        home_y + random.randint(0, delta_y)
+    )
+
+
+def scroll_right():
+    p.moveTo(center_left_x, center_left_y)
+    p.dragTo(center_right_x, center_right_y, duration=5)
+
+
+def scroll_left():
+    p.moveTo(center_right_x, center_right_y)
+    p.dragTo(center_left_x, center_left_y, duration=5)
+
+
 def get_main_screen(main_screen, arg_is_fire):
     if not main_screen:
         for _ in range(15):
@@ -205,11 +247,10 @@ def get_main_screen(main_screen, arg_is_fire):
         else:
             logger.error("Exit from guild with success")
 
-    if arg_is_fire:
-        p.moveTo(
-            home_x + random.randint(0, delta_x), 
-            home_y + random.randint(0, delta_y)
-        )
+    main_screen_real = is_main_screen(main_screen)
+    
+    if arg_is_fire and main_screen_real:
+        move_random_around_home()
 
     return True
 
@@ -278,7 +319,7 @@ def do_machine(main_screen, arg_is_fire):
         logger.debug("No daily missions advice")
         return main_screen
     
-    time.sleep(0.5)
+    time.sleep(1)
     
     try:
         click_on_image(open_path)
@@ -288,34 +329,48 @@ def do_machine(main_screen, arg_is_fire):
     
     time.sleep(0.5)
     
-    for i in range(9):
-        try:
-            click_on_image(liberate_path)
-        except ImageNotFoundException:
-            logger.debug("Failed to find a liberate mission")
-            break
-        
-        max_time = 60
-        start_time = time.time()
-        
-        while True:
+    scroll_right()
+    scroll_right()
+    
+    time.sleep(1)
+    
+    n = 0
+    
+    for j in range(2):
+        for i in range(5):
             try:
-                click_on_image(ok_path)
+                click_on_image(liberate_path)
             except ImageNotFoundException:
-                pass
-            else:
-                time.sleep(0.5)
+                logger.debug("Failed to find a liberate mission")
                 break
             
-            if time.time() - start_time >= max_time:
-                logger.error(
-                    "Failed to find ok button, or liberate missions lasts" + 
-                    f" more than {max_time} seconds"
-                )
+            max_time = 60
+            start_time = time.time()
             
-            time.sleep(0.2)
+            while True:
+                try:
+                    click_on_image(ok_path)
+                except ImageNotFoundException:
+                    pass
+                else:
+                    time.sleep(0.5)
+                    break
+                
+                if time.time() - start_time >= max_time:
+                    logger.error(
+                        "Failed to find ok button, or liberate missions lasts" + 
+                        f" more than {max_time} seconds"
+                    )
+                    
+                    break
+                
+                n += 1
+                time.sleep(0.2)
         
-    logger.info(f"Liberated {i+1} areas")
+        scroll_left()
+        time.sleep(1)
+        
+    logger.info(f"Liberated {n} areas")
     
     return main_screen
 
@@ -508,20 +563,22 @@ def do_map_mission(mission_path, mission_type):
             try:
                 click_on_image(start_path)
             except ImageNotFoundException:
-                logger.debug(f"Failed to start the {mission_type} mission")
-                p.press("esc")
-                time.sleep(0.5)
-                
                 try:
-                    p.locateOnScreen(str(guild_path))
+                    click_on_image(free_orange_path)
                 except ImageNotFoundException:
-                    pass
-                else:
-                    main_screen = click_on_map(None)
+                    logger.debug(f"Failed to start the {mission_type} mission")
+                    p.press("esc")
+                    time.sleep(0.5)
                     
-                    if main_screen is None:
-                        return
-                    
+                    try:
+                        p.locateOnScreen(str(guild_path))
+                    except ImageNotFoundException:
+                        pass
+                    else:
+                        main_screen = click_on_map(None)
+                        
+                        if main_screen is None:
+                            return
             else:
                 logger.info(f"Mission of type {mission_type} started")
                 mission_started = True
@@ -534,7 +591,6 @@ def do_map_mission(mission_path, mission_type):
     
 
 def click_on_map(main_screen):
-    
     try:
         click_on_image(map_advice_1_path, confidence=0.95)
     except ImageNotFoundException:
@@ -598,7 +654,7 @@ def do_map(main_screen, arg_is_fire):
     
     while True:
         try:
-            click_on_image(claim_map_path, confidence=0.7)
+            click_on_image(claim_map_path, confidence=0.75)
         except ImageNotFoundException:
             break
         
@@ -634,59 +690,70 @@ def do_map(main_screen, arg_is_fire):
 def do_shop(main_screen, arg_is_fire):
     main_screen = get_main_screen(main_screen, arg_is_fire)
     
-    try:
-        logger.debug("Clicking on shop advice 1")
-        click_on_image(shop_advice_1_path, confidence=0.95)
-    except ImageNotFoundException:
+    logger.debug("Clicking on shop advice 1")
+    done = click_on_image_no_exc(shop_advice_1_path, confidence=0.95)
+    
+    if not done:
+        logger.debug("Clicking on shop advice 2")
+        done = click_on_image_no_exc(shop_advice_2_path, confidence=0.98)
+    
+    if not done:
+        logger.debug("Clicking on shop advice 3")
+        done = click_on_image_no_exc(shop_advice_3_path, confidence=0.98)
+    
+    if not done:
+        logger.debug("Clicking on shop advice 4")
+        done = click_on_image_no_exc(shop_advice_4_path)
+    
+    if not done:
+        logger.debug("Clicking on shop advice 5")
+        done = click_on_image_no_exc(shop_advice_5_path, confidence=0.99)
+    
+    if not done:
+        logger.debug("Clicking on shop advice 6")
+        done = click_on_image_no_exc(shop_advice_6_path, confidence=0.99)
+    
+    if not done:
+        logger.debug("Clicking on shop advice 7")
+        done = click_on_image_no_exc(shop_advice_7_path, confidence=0.99)
+    
+    if not done:
+        logger.debug("Clicking on shop advice 8")
+        done = click_on_image_no_exc(shop_advice_8_path, confidence=0.99)
+    
+    if not done:
+        logger.debug("Clicking on shop advice 9")
+        done = click_on_image_no_exc(shop_advice_9_path, confidence=0.99)
+    
+    if not done:
+        logger.debug("Clicking on shop advice 10")
+        done = click_on_image_no_exc(shop_advice_10_path, confidence=0.99)
+    
+    if not done:
+        logger.debug("Clicking on shop advice 11")
+        done = click_on_image_no_exc(shop_advice_11_path, confidence=0.99)
+    
+    if not done:
         logger.debug("No shop advice")
         return main_screen
-        
-        # try:
-        #     logger.debug("Clicking on shop advice 2")
-        #     click_on_image(shop_advice_2_path, confidence=0.98)
-        # except ImageNotFoundException:
-        #     try:
-        #         logger.debug("Clicking on shop advice 3")
-        #         click_on_image(shop_advice_3_path, confidence=0.98)
-        #     except ImageNotFoundException:
-        #         try:
-        #             logger.debug("Clicking on shop advice 4")
-        #             click_on_image(shop_advice_4_path, confidence=1)
-        #         except ImageNotFoundException:
-        #             try:
-        #                 logger.debug("Clicking on shop advice 5")
-        #                 click_on_image(shop_advice_5_path, confidence=0.99)
-        #             except ImageNotFoundException:
-        #                 try:
-        #                     logger.debug("Clicking on shop advice 5")
-        #                     click_on_image(shop_advice_6_path, confidence=1)
-        #                 except ImageNotFoundException:
-        #                     logger.debug("No shop advice")
-        #                     return main_screen
-        #                 else:
-        #                     main_screen = False
-        #             else:
-        #                 main_screen = False
-        #         else:
-        #             main_screen = False
-        #     else:
-        #         main_screen = False
-        # else:
-        #     main_screen = False
-    else:
-        main_screen = False
+    
+    main_screen = False
     
     time.sleep(0.2)
 
     try:
-        click_on_image(free_path, confidence=0.7)
+        click_on_image(free_path, confidence=0.6)
     except ImageNotFoundException:
         logger.error("Failed to get shop free gift")
     
     time.sleep(0.2)
     
+    move_random_around_home()
+    
+    time.sleep(0.5)
+    
     try:
-        click_on_image(shop_daily_rewards_path, confidence=0.8)
+        click_on_image(shop_daily_rewards_path)
     except ImageNotFoundException:
         logger.error("Failed to find daily rewards button")
         
@@ -695,7 +762,7 @@ def do_shop(main_screen, arg_is_fire):
         logger.info("Claimed daily shop reward")
     
     try:
-        click_on_image(check_in_path)
+        click_on_image(check_in_path, confidence=0.7)
     except ImageNotFoundException:
         logger.error(
             "Failed to find daily shop check in daily rewards button"
@@ -719,29 +786,42 @@ def do_tavern(main_screen, arg_is_fire):
 
     time.sleep(2)
     
-    try:
-        click_on_image(n1500_path, confidence=0.7)
-    except ImageNotFoundException:
-        logger.error("Failed to get 5 tavern tokens")
-        return main_screen
-    
-    time.sleep(2)
-    p.press("esc")
-    
-    try:
-        click_on_image(n5_path)
-    except ImageNotFoundException:
-        logger.error("Failed to bet 5 tavern tokens")
-        return main_screen
-    
-    time.sleep(1)
-    
-    try:
-        click_on_image(n5_red_path, confidence=0.8)
-    except ImageNotFoundException:
-        logger.error("Failed to get 5 tavern cards")
-    
-    time.sleep(5)
+    for i in range(100):
+        try:
+            click_on_image(tavern_get_5_tokens_path, confidence=0.7)
+        except ImageNotFoundException:
+            if i == 0:
+                log_func = logger.error
+            else:
+                log_func = logger.debug
+            
+            log_func("Failed to get 5 tavern tokens")
+            
+            return main_screen
+        
+        time.sleep(2)
+        p.press("esc")
+        
+        try:
+            click_on_image(n5_path)
+        except ImageNotFoundException:
+            logger.error("Failed to bet 5 tavern tokens")
+            return main_screen
+        
+        time.sleep(1)
+        
+        try:
+            click_on_image(n5_red_path, confidence=0.8)
+        except ImageNotFoundException:
+            logger.error("Failed to get 5 tavern cards")
+        
+        time.sleep(6)
+        
+        try:
+            click_on_image(get_game_tokens_path)
+        except ImageNotFoundException:
+            logger.error("Failed to get game tokens")
+            return main_screen
     
     return main_screen
 
@@ -768,7 +848,10 @@ def do_alchemist(main_screen, arg_is_fire):
                 click_on_image(claim_dark_green_5_path)
                 time.sleep(0.5)
             except ImageNotFoundException:
-                break
+                try:
+                    click_on_image(free_orange_path)
+                except ImageNotFoundException:
+                    break
     
     try:
         click_on_image(alchemist_blood_path, confidence=0.8)
@@ -778,13 +861,13 @@ def do_alchemist(main_screen, arg_is_fire):
         logger.info("Alchemist blood experiment started")
         time.sleep(0.5)
     
-    try:
-        click_on_image(alchemist_dust_path, confidence=0.7)
-    except ImageNotFoundException:
-        logger.debug("No alchemist dust experiment to start")
-    else:
-        logger.info("Alchemist dust experiment started")
-        time.sleep(0.5)
+    # try:
+    #     click_on_image(alchemist_dust_path, confidence=0.7)
+    # except ImageNotFoundException:
+    #     logger.debug("No alchemist dust experiment to start")
+    # else:
+    #     logger.info("Alchemist dust experiment started")
+    #     time.sleep(0.5)
     
     try:
         click_on_image(alchemist_coin_path)
@@ -824,7 +907,7 @@ def do_oracle(main_screen, arg_is_fire):
     main_screen = get_main_screen(main_screen, arg_is_fire)
     
     try:
-        click_on_image(oracle_advice_path)
+        click_on_image(oracle_advice_path, confidence=0.8)
     except ImageNotFoundException:
         logger.debug("No oracle advice")
         return main_screen
@@ -867,15 +950,22 @@ train_free_path_confidence = 0.95
 
 
 
-def do_guardian_specific(guardian_path, guardian_num, guardian_level):
+def do_guardian_specific(
+    guardian_path, 
+    guardian_num, 
+    guardian_level, 
+    confidence=0.9
+):
         try:
-            click_on_image(guardian_path)
+            click_on_image(guardian_path, confidence=confidence)
         except ImageNotFoundException:
             logger.error(
                 f"Unable to find guardian {guardian_num} " + 
                 f"level {guardian_level}"
             )
         else:
+            time.sleep(1)
+            
             try:
                 click_on_image(
                     train_free_path, 
@@ -894,6 +984,8 @@ def do_guardian_specific(guardian_path, guardian_num, guardian_level):
                 
                 return True
         
+        time.sleep(1)
+        
         return False
 
 
@@ -901,19 +993,24 @@ def do_guardian(main_screen, arg_is_fire):
     main_screen = get_main_screen(main_screen, arg_is_fire)
     
     try:
-        click_on_image(guardian_advice_1_path)
+        click_on_image(guardian_advice_1_5_path)
     except ImageNotFoundException:
-        logger.debug("No guardian advice")
-        return main_screen
+        try:
+            click_on_image(guardian_advice_3_2_path)
+        except ImageNotFoundException:
+            logger.debug("No guardian advice")
+            return main_screen
+        else:
+            main_screen = False
     else:
         main_screen = False
 
-    time.sleep(0.2)
+    time.sleep(1)
     
     try:
         click_on_image(train_free_path, confidence=train_free_path_confidence)
     except ImageNotFoundException:
-        done = do_guardian_specific(guardian_1_5_path, 1, 5)
+        done = do_guardian_specific(guardian_1_5_path, 1, 5, confidence=0.7)
         
         if done:
             return main_screen
@@ -927,21 +1024,20 @@ def do_guardian(main_screen, arg_is_fire):
         
         if done:
             return main_screen
+        
+        done = do_guardian_specific(guardian_3_2_path, 3, 2, confidence=0.7)
+        
+        if done:
+            return main_screen
+        
+        done = do_guardian_specific(guardian_3_3_path, 3, 3, confidence=0.65)
+        
+        if done:
+            return main_screen
             
         logger.error("No free train")
     else:
         logger.info("Free train on current guardian")
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
     
     return main_screen
 
@@ -960,7 +1056,7 @@ def do_oracle_gift(main_screen, arg_is_fire):
     time.sleep(0.2)
     
     try:
-        click_on_image(free_path, confidence=0.8)
+        click_on_image(free_path, confidence=0.75)
     except ImageNotFoundException:
         logger.debug("No oracle gift")
     
@@ -1009,16 +1105,23 @@ except IndexError:
 
 arg_is_fire = arg == fire_arg
 
-wait_sec = 40 if arg_is_fire else 3
+wait_sec = 100 if arg_is_fire else 3
 wait_sec_packaxes = 5737
 
 now = time.time()
 prev_time = now - wait_sec - 2
 prev_time_pickaxes = now - wait_sec_packaxes - 2
+prev_time_safe = now
+safe_delta_sec = 300
 
 while True:
     curr_time = time.time()
-
+    
+    if curr_time - prev_time_safe >= safe_delta_sec:
+        main_screen = is_main_screen(main_screen)
+        prev_time_safe = time.time()
+        
+    
     if curr_time - prev_time_pickaxes >= wait_sec_packaxes:
         main_screen = get_pickaxes(main_screen, arg_is_fire)
         prev_time_pickaxes = time.time()
@@ -1044,5 +1147,7 @@ while True:
     
     main_screen_real = is_main_screen(main_screen)
     
-    if arg_is_fire and main_screen_real:    
+    if arg_is_fire and main_screen_real: 
+        move_random_around_home()
+        
         p.click(interval=0.2)
