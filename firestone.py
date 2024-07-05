@@ -57,7 +57,6 @@ guild_supplies_2_path = image_dir / f"guild_supplies_2{image_ext}"
 
 claim_green_path = image_dir / f"claim_green{image_ext}"
 claim_green_big_path = image_dir / f"claim_green_big{image_ext}"
-claim_dark_green_path = image_dir / f"claim_dark_green{image_ext}"
 claim_dark_green_2_path = image_dir / f"claim_dark_green_2{image_ext}"
 claim_dark_green_3_path = image_dir / f"claim_dark_green_3{image_ext}"
 claim_dark_green_4_path = image_dir / f"claim_dark_green_4{image_ext}"
@@ -78,6 +77,7 @@ exit_guild_path = image_dir / f"exit_guild{image_ext}"
 daily_missions_path = image_dir / f"daily_missions{image_ext}"
 open_path = image_dir / f"open{image_ext}"
 liberate_path = image_dir / f"liberate{image_ext}"
+fight_path = image_dir / f"fight{image_ext}"
 ok_path = image_dir / f"ok{image_ext}"
 train_free_path = image_dir / f"train_free{image_ext}"
 get_game_tokens_path = image_dir / f"get_game_tokens{image_ext}"
@@ -95,6 +95,7 @@ crystal_advice_path = image_dir / f"crystal_advice{image_ext}"
 crystal_hit_path = image_dir / f"crystal_hit{image_ext}"
 crystal_hit_2_path = image_dir / f"crystal_hit_2{image_ext}"
 
+map_advice_path = image_dir / f"map_advice{image_ext}"
 map_advice_1_path = image_dir / f"map_advice_1{image_ext}"
 map_advice_2_path = image_dir / f"map_advice_2{image_ext}"
 map_advice_3_path = image_dir / f"map_advice_3{image_ext}"
@@ -112,6 +113,7 @@ map_mission_naval_path = image_dir / f"map_mission_naval{image_ext}"
 map_mission_naval_2_path = image_dir / f"map_mission_naval_2{image_ext}"
 map_mission_cave_path = image_dir / f"map_mission_cave{image_ext}"
 
+shop_advice_path = image_dir / f"shop_advice{image_ext}"
 shop_advice_1_path = image_dir / f"shop_advice_1{image_ext}"
 shop_advice_2_path = image_dir / f"shop_advice_2{image_ext}"
 shop_advice_3_path = image_dir / f"shop_advice_3{image_ext}"
@@ -123,7 +125,8 @@ shop_advice_8_path = image_dir / f"shop_advice_8{image_ext}"
 shop_advice_9_path = image_dir / f"shop_advice_9{image_ext}"
 shop_advice_10_path = image_dir / f"shop_advice_10{image_ext}"
 shop_advice_11_path = image_dir / f"shop_advice_11{image_ext}"
-shop_daily_rewards_path = image_dir / f"shop_daily_rewards{image_ext}"
+shop_advice_12_path = image_dir / f"shop_advice_12{image_ext}"
+bundles_advice_path = image_dir / f"bundles_advice{image_ext}"
 
 tavern_advice_path = image_dir / f"tavern_advice{image_ext}"
 tavern_get_5_tokens_path = image_dir / f"tavern_get_5_tokens{image_ext}"
@@ -142,11 +145,14 @@ oracle_gift_advice_path = image_dir / f"oracle_gift_advice{image_ext}"
 
 guardian_advice_1_5_path = image_dir / f"guardian_advice_1_5{image_ext}"
 guardian_advice_3_2_path = image_dir / f"guardian_advice_3_2{image_ext}"
+guardian_advice_3_3_path = image_dir / f"guardian_advice_3_3{image_ext}"
+guardian_advice_3_4_path = image_dir / f"guardian_advice_3_4{image_ext}"
 guardian_1_5_path = image_dir / f"guardian_1_5{image_ext}"
 guardian_2_5_path = image_dir / f"guardian_2_5{image_ext}"
 guardian_3_1_path = image_dir / f"guardian_3_1{image_ext}"
 guardian_3_2_path = image_dir / f"guardian_3_2{image_ext}"
 guardian_3_3_path = image_dir / f"guardian_3_3{image_ext}"
+guardian_3_4_path = image_dir / f"guardian_3_4{image_ext}"
 
 main_screen = True
 
@@ -251,6 +257,7 @@ def get_main_screen(main_screen, arg_is_fire):
     
     if arg_is_fire and main_screen_real:
         move_random_around_home()
+        p.click(interval=0.5)
 
     return True
 
@@ -322,7 +329,7 @@ def do_machine(main_screen, arg_is_fire):
     time.sleep(1)
     
     try:
-        click_on_image(open_path)
+        click_on_image(open_path, confidence=0.95)
     except ImageNotFoundException:
         logger.debug("Failed to find daily missions open button")
         return main_screen
@@ -341,8 +348,11 @@ def do_machine(main_screen, arg_is_fire):
             try:
                 click_on_image(liberate_path)
             except ImageNotFoundException:
-                logger.debug("Failed to find a liberate mission")
-                break
+                try:
+                    click_on_image(fight_path)
+                except ImageNotFoundException:
+                    logger.debug("Failed to find a liberate or fight mission")
+                    break
             
             max_time = 60
             start_time = time.time()
@@ -549,11 +559,14 @@ def hit_the_crystal(main_screen, arg_is_fire, from_advice=True):
     return main_screen
 
 
-def do_map_mission(mission_path, mission_type):
+def do_map_mission(mission_path, mission_type, confidence=0.7):
     mission_started = False
     
     try:
-        locations = locateAllOnScreenAndFilterNear(mission_path, confidence=0.7)
+        locations = locateAllOnScreenAndFilterNear(
+            mission_path, 
+            confidence=confidence,
+        )
         
         for i, location in enumerate(locations):
             point = p.center(location)
@@ -592,45 +605,10 @@ def do_map_mission(mission_path, mission_type):
 
 def click_on_map(main_screen):
     try:
-        click_on_image(map_advice_1_path, confidence=0.95)
+        click_on_image(map_advice_path)
     except ImageNotFoundException:
-        try:
-            click_on_image(map_advice_2_path)
-        except ImageNotFoundException:
-            try:
-                click_on_image(map_advice_3_path)
-            except ImageNotFoundException:
-                try:
-                    click_on_image(map_advice_4_path)
-                except ImageNotFoundException:
-                    try:
-                        click_on_image(map_advice_5_path)
-                    except ImageNotFoundException:
-                        try:
-                            click_on_image(map_advice_6_path)
-                        except ImageNotFoundException:
-                            try:
-                                click_on_image(map_advice_7_path)
-                            except ImageNotFoundException:
-                                try:
-                                    click_on_image(map_advice_8_path)
-                                except ImageNotFoundException:
-                                    logger.debug("No map advice")
-                                    return None
-                                else:
-                                    main_screen = False
-                            else:
-                                main_screen = False
-                        else:
-                            main_screen = False
-                    else:
-                        main_screen = False
-                else:
-                    main_screen = False
-            else:
-                main_screen = False
-        else:
-            main_screen = False
+        logger.debug("No map advice")
+        return None
     else:
         main_screen = False
     
@@ -680,9 +658,9 @@ def do_map(main_screen, arg_is_fire):
     do_map_mission(map_mission_naval_2_path, "naval")
     do_map_mission(map_mission_monster_path, "monster")
     do_map_mission(map_mission_dragon_path, "dragon")
-    do_map_mission(map_mission_war_path, "war")
+    do_map_mission(map_mission_war_path, "war", confidence=0.65)
     do_map_mission(map_mission_scout_path, "scout")
-    do_map_mission(map_mission_adventure_path, "adventure")
+    do_map_mission(map_mission_adventure_path, "adventure", confidence=0.65)
 
     return main_screen
 
@@ -690,50 +668,11 @@ def do_map(main_screen, arg_is_fire):
 def do_shop(main_screen, arg_is_fire):
     main_screen = get_main_screen(main_screen, arg_is_fire)
     
-    logger.debug("Clicking on shop advice 1")
-    done = click_on_image_no_exc(shop_advice_1_path, confidence=0.95)
+    logger.debug("Clicking on shop advice")
     
-    if not done:
-        logger.debug("Clicking on shop advice 2")
-        done = click_on_image_no_exc(shop_advice_2_path, confidence=0.98)
-    
-    if not done:
-        logger.debug("Clicking on shop advice 3")
-        done = click_on_image_no_exc(shop_advice_3_path, confidence=0.98)
-    
-    if not done:
-        logger.debug("Clicking on shop advice 4")
-        done = click_on_image_no_exc(shop_advice_4_path)
-    
-    if not done:
-        logger.debug("Clicking on shop advice 5")
-        done = click_on_image_no_exc(shop_advice_5_path, confidence=0.99)
-    
-    if not done:
-        logger.debug("Clicking on shop advice 6")
-        done = click_on_image_no_exc(shop_advice_6_path, confidence=0.99)
-    
-    if not done:
-        logger.debug("Clicking on shop advice 7")
-        done = click_on_image_no_exc(shop_advice_7_path, confidence=0.99)
-    
-    if not done:
-        logger.debug("Clicking on shop advice 8")
-        done = click_on_image_no_exc(shop_advice_8_path, confidence=0.99)
-    
-    if not done:
-        logger.debug("Clicking on shop advice 9")
-        done = click_on_image_no_exc(shop_advice_9_path, confidence=0.99)
-    
-    if not done:
-        logger.debug("Clicking on shop advice 10")
-        done = click_on_image_no_exc(shop_advice_10_path, confidence=0.99)
-    
-    if not done:
-        logger.debug("Clicking on shop advice 11")
-        done = click_on_image_no_exc(shop_advice_11_path, confidence=0.99)
-    
-    if not done:
+    try:
+        click_on_image(shop_advice_path)
+    except ImageNotFoundException:
         logger.debug("No shop advice")
         return main_screen
     
@@ -745,21 +684,24 @@ def do_shop(main_screen, arg_is_fire):
         click_on_image(free_path, confidence=0.6)
     except ImageNotFoundException:
         logger.error("Failed to get shop free gift")
+        
+    return main_screen
+
+
+def do_bundle(main_screen, arg_is_fire):
+    main_screen = get_main_screen(main_screen, arg_is_fire)
     
-    time.sleep(0.2)
-    
-    move_random_around_home()
-    
-    time.sleep(0.5)
+    logger.debug("Clicking on shop bundles advice")
     
     try:
-        click_on_image(shop_daily_rewards_path)
+        click_on_image(bundles_advice_path)
     except ImageNotFoundException:
-        logger.error("Failed to find daily rewards button")
-        
+        logger.debug("No shop bundles advice")
         return main_screen
-    else:
-        logger.info("Claimed daily shop reward")
+    
+    main_screen = False
+    
+    time.sleep(0.5)
     
     try:
         click_on_image(check_in_path, confidence=0.7)
@@ -998,8 +940,18 @@ def do_guardian(main_screen, arg_is_fire):
         try:
             click_on_image(guardian_advice_3_2_path)
         except ImageNotFoundException:
-            logger.debug("No guardian advice")
-            return main_screen
+            try:
+                click_on_image(guardian_advice_3_3_path)
+            except ImageNotFoundException:
+                try:
+                    click_on_image(guardian_advice_3_4_path)
+                except ImageNotFoundException:
+                    logger.debug("No guardian advice")
+                    return main_screen
+                else:
+                    main_screen = False
+            else:
+                main_screen = False
         else:
             main_screen = False
     else:
@@ -1031,6 +983,11 @@ def do_guardian(main_screen, arg_is_fire):
             return main_screen
         
         done = do_guardian_specific(guardian_3_3_path, 3, 3, confidence=0.65)
+        
+        if done:
+            return main_screen
+        
+        done = do_guardian_specific(guardian_3_4_path, 3, 4, confidence=0.7)
         
         if done:
             return main_screen
@@ -1070,6 +1027,7 @@ def check(main_screen, arg_is_fire):
     main_screen = get_pickaxes(main_screen, arg_is_fire, from_advice=True)
     main_screen = do_map(main_screen, arg_is_fire)
     main_screen = do_shop(main_screen, arg_is_fire)
+    main_screen = do_bundle(main_screen, arg_is_fire)
     main_screen = do_tavern(main_screen, arg_is_fire)
     main_screen = do_alchemist(main_screen, arg_is_fire)
     main_screen = do_engineer(main_screen, arg_is_fire)
@@ -1150,4 +1108,4 @@ while True:
     if arg_is_fire and main_screen_real: 
         move_random_around_home()
         
-        p.click(interval=0.2)
+        p.click(interval=0.5)
