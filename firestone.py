@@ -7,6 +7,7 @@ import sys
 import logging
 import random
 import configparser
+import argparse
 
 handler = logging.StreamHandler()
 formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
@@ -147,12 +148,14 @@ guardian_advice_1_5_path = image_dir / f"guardian_advice_1_5{image_ext}"
 guardian_advice_3_2_path = image_dir / f"guardian_advice_3_2{image_ext}"
 guardian_advice_3_3_path = image_dir / f"guardian_advice_3_3{image_ext}"
 guardian_advice_3_4_path = image_dir / f"guardian_advice_3_4{image_ext}"
+guardian_advice_3_5_path = image_dir / f"guardian_advice_3_5{image_ext}"
 guardian_1_5_path = image_dir / f"guardian_1_5{image_ext}"
 guardian_2_5_path = image_dir / f"guardian_2_5{image_ext}"
 guardian_3_1_path = image_dir / f"guardian_3_1{image_ext}"
 guardian_3_2_path = image_dir / f"guardian_3_2{image_ext}"
 guardian_3_3_path = image_dir / f"guardian_3_3{image_ext}"
 guardian_3_4_path = image_dir / f"guardian_3_4{image_ext}"
+guardian_3_5_path = image_dir / f"guardian_3_5{image_ext}"
 
 main_screen = True
 
@@ -768,7 +771,7 @@ def do_tavern(main_screen, arg_is_fire):
     return main_screen
 
 
-def do_alchemist(main_screen, arg_is_fire):
+def do_alchemist(main_screen, arg_is_fire, spend_dust):
     main_screen = get_main_screen(main_screen, arg_is_fire)
     
     try:
@@ -803,13 +806,14 @@ def do_alchemist(main_screen, arg_is_fire):
         logger.info("Alchemist blood experiment started")
         time.sleep(0.5)
     
-    # try:
-    #     click_on_image(alchemist_dust_path, confidence=0.7)
-    # except ImageNotFoundException:
-    #     logger.debug("No alchemist dust experiment to start")
-    # else:
-    #     logger.info("Alchemist dust experiment started")
-    #     time.sleep(0.5)
+    if spend_dust:
+        try:
+            click_on_image(alchemist_dust_path, confidence=0.7)
+        except ImageNotFoundException:
+            logger.debug("No alchemist dust experiment to start")
+        else:
+            logger.info("Alchemist dust experiment started")
+            time.sleep(0.5)
     
     try:
         click_on_image(alchemist_coin_path)
@@ -946,8 +950,13 @@ def do_guardian(main_screen, arg_is_fire):
                 try:
                     click_on_image(guardian_advice_3_4_path)
                 except ImageNotFoundException:
-                    logger.debug("No guardian advice")
-                    return main_screen
+                    try:
+                        click_on_image(guardian_advice_3_5_path)
+                    except ImageNotFoundException:
+                        logger.debug("No guardian advice")
+                        return main_screen
+                    else:
+                        main_screen = False
                 else:
                     main_screen = False
             else:
@@ -987,6 +996,11 @@ def do_guardian(main_screen, arg_is_fire):
         if done:
             return main_screen
         
+        done = do_guardian_specific(guardian_3_5_path, 3, 5, confidence=0.7)
+        
+        if done:
+            return main_screen
+        
         done = do_guardian_specific(guardian_3_4_path, 3, 4, confidence=0.7)
         
         if done:
@@ -1019,7 +1033,7 @@ def do_oracle_gift(main_screen, arg_is_fire):
     
     return main_screen
 
-def check(main_screen, arg_is_fire):
+def check(main_screen, arg_is_fire, spend_dust):
     main_screen = do_guild_expedition(main_screen, arg_is_fire)
     main_screen = do_machine(main_screen, arg_is_fire)
     main_screen = do_quest(main_screen, arg_is_fire)
@@ -1029,7 +1043,7 @@ def check(main_screen, arg_is_fire):
     main_screen = do_shop(main_screen, arg_is_fire)
     main_screen = do_bundle(main_screen, arg_is_fire)
     main_screen = do_tavern(main_screen, arg_is_fire)
-    main_screen = do_alchemist(main_screen, arg_is_fire)
+    main_screen = do_alchemist(main_screen, arg_is_fire, spend_dust)
     main_screen = do_engineer(main_screen, arg_is_fire)
     main_screen = do_oracle(main_screen, arg_is_fire)
     main_screen = do_guardian(main_screen, arg_is_fire)
@@ -1038,6 +1052,27 @@ def check(main_screen, arg_is_fire):
     main_screen = get_main_screen(main_screen, arg_is_fire)
     
     return main_screen
+
+parser = argparse.ArgumentParser(
+    prog='firestone.py',
+    description='Automates the Firestone idle game',
+)
+
+parser.add_argument(
+    "command", 
+    choices=("fire",), 
+    nargs="?",
+    help="Make the guardian attack",
+)
+
+parser.add_argument(
+    "-d", 
+    "--spend-dust", 
+    action="store_true", 
+    help="Enables the auto-clicking on dust researches in Alchemist"
+)
+
+args = parser.parse_args()
 
 
 p.keyDown("alt")
@@ -1048,20 +1083,8 @@ p.keyUp("alt")
 
 time.sleep(0.5)
 
-fire_arg = "fire"
-possible_args = (fire_arg, )
-
-try:
-    arg = sys.argv[1]
-
-    if arg not in possible_args:
-        raise ValueError(
-            f"argument must be one of this values: {possible_args}"
-        )
-except IndexError:
-    arg = None
-
-arg_is_fire = arg == fire_arg
+arg_is_fire = args.command == "fire"
+spend_dust = args.spend_dust
 
 wait_sec = 100 if arg_is_fire else 3
 wait_sec_packaxes = 5737
@@ -1093,7 +1116,7 @@ while True:
             p.moveTo(advice_down_x, advice_down_y)
             p.dragTo(advice_up_x, advice_up_y, duration=3)
             time.sleep(4)
-            main_screen = check(main_screen, arg_is_fire)
+            main_screen = check(main_screen, arg_is_fire, spend_dust)
             main_screen_real = is_main_screen(main_screen)
             
             if main_screen_real:
