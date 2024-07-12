@@ -15,3 +15,5 @@
 9. (optional) make sure the window with Firestone is the next one you access clicking alt+tab
 10. `python firestone.py`
 11. enjoy!
+
+If you want to make the guardian hit for faster restart after prestige, `python firestone.py fire`
