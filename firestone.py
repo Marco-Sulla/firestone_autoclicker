@@ -157,6 +157,9 @@ guardian_3_3_path = image_dir / f"guardian_3_3{image_ext}"
 guardian_3_4_path = image_dir / f"guardian_3_4{image_ext}"
 guardian_3_5_path = image_dir / f"guardian_3_5{image_ext}"
 
+events_1_path = image_dir / f"events_1{image_ext}"
+decorated_heroes_path = image_dir / f"decorated_heroes{image_ext}"
+
 main_screen = True
 
 
@@ -1033,7 +1036,36 @@ def do_oracle_gift(main_screen, arg_is_fire):
     
     return main_screen
 
-def check(main_screen, arg_is_fire, spend_dust):
+
+def do_events(main_screen, arg_is_fire):
+    main_screen = get_main_screen(main_screen, arg_is_fire)
+    
+    try:
+        click_on_image(events_1_path)
+    except ImageNotFoundException:
+        logger.debug("No events advice")
+        return main_screen
+    else:
+        main_screen = False
+
+    time.sleep(0.2)
+    
+    try:
+        click_on_image(decorated_heroes_path)
+    except ImageNotFoundException:
+        logger.debug("No Decorated Heroes event")
+        return main_screen
+
+    time.sleep(0.5)
+    
+    try:
+        click_on_image(claim_dark_green_3_path, all=True)
+    except ImageNotFoundException2:
+        logger.error("Unable to claim all on Decorated Heroes")
+    
+    return main_screen
+
+def check(main_screen, arg_is_fire, spend_dust, events):
     main_screen = do_guild_expedition(main_screen, arg_is_fire)
     main_screen = do_machine(main_screen, arg_is_fire)
     main_screen = do_quest(main_screen, arg_is_fire)
@@ -1042,14 +1074,19 @@ def check(main_screen, arg_is_fire, spend_dust):
     main_screen = do_map(main_screen, arg_is_fire)
     main_screen = do_shop(main_screen, arg_is_fire)
     main_screen = do_bundle(main_screen, arg_is_fire)
-    main_screen = do_tavern(main_screen, arg_is_fire)
+    
+    if not no_tavern:
+        main_screen = do_tavern(main_screen, arg_is_fire)
+    
     main_screen = do_alchemist(main_screen, arg_is_fire, spend_dust)
     main_screen = do_engineer(main_screen, arg_is_fire)
     main_screen = do_oracle(main_screen, arg_is_fire)
     main_screen = do_guardian(main_screen, arg_is_fire)
     main_screen = do_oracle_gift(main_screen, arg_is_fire)
+    main_screen = do_oracle_gift(main_screen, arg_is_fire)
     
-    main_screen = get_main_screen(main_screen, arg_is_fire)
+    if events:
+        main_screen = do_events(main_screen, arg_is_fire)
     
     return main_screen
 
@@ -1072,6 +1109,20 @@ parser.add_argument(
     help="Enables the auto-clicking on dust researches in Alchemist"
 )
 
+parser.add_argument(
+    "-t", 
+    "--no-tavern", 
+    action="store_true", 
+    help="Disables auto-clicking on the Tavern"
+)
+
+parser.add_argument(
+    "-e", 
+    "--events", 
+    action="store_true", 
+    help="Enables auto-clicking on the Events (for now only Decorated Heroes)"
+)
+
 args = parser.parse_args()
 
 
@@ -1085,6 +1136,8 @@ time.sleep(0.5)
 
 arg_is_fire = args.command == "fire"
 spend_dust = args.spend_dust
+no_tavern = args.no_tavern
+events = args.events
 
 wait_sec = 100 if arg_is_fire else 3
 wait_sec_packaxes = 5737
@@ -1108,7 +1161,7 @@ while True:
         prev_time_pickaxes = time.time()
 
     if curr_time - prev_time >= wait_sec:
-        main_screen = check(main_screen, arg_is_fire)
+        main_screen = check(main_screen, arg_is_fire, spend_dust, events)
         main_screen_real = is_main_screen(main_screen)
         
         if main_screen_real:
@@ -1116,7 +1169,7 @@ while True:
             p.moveTo(advice_down_x, advice_down_y)
             p.dragTo(advice_up_x, advice_up_y, duration=3)
             time.sleep(4)
-            main_screen = check(main_screen, arg_is_fire, spend_dust)
+            main_screen = check(main_screen, arg_is_fire, spend_dust, events)
             main_screen_real = is_main_screen(main_screen)
             
             if main_screen_real:
