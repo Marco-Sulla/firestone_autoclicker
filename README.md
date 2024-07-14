@@ -19,3 +19,7 @@
 If you want to make the guardian hit for faster restart after prestige, `python firestone.py fire`
 
 If you want to start also dust researches in Alchemist, `python firestone.py -d`
+
+If you want to disable automatic Tavern, `python firestone.py -t`
+
+If you want to automate claming in events (only Decorated Heroes for now), `python firestone.py -e`
