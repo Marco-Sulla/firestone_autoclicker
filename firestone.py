@@ -158,6 +158,8 @@ guardian_3_4_path = image_dir / f"guardian_3_4{image_ext}"
 guardian_3_5_path = image_dir / f"guardian_3_5{image_ext}"
 
 events_1_path = image_dir / f"events_1{image_ext}"
+events_2_path = image_dir / f"events_2{image_ext}"
+events_3_path = image_dir / f"events_3{image_ext}"
 decorated_heroes_path = image_dir / f"decorated_heroes{image_ext}"
 
 main_screen = True
@@ -1043,8 +1045,18 @@ def do_events(main_screen, arg_is_fire):
     try:
         click_on_image(events_1_path)
     except ImageNotFoundException:
-        logger.debug("No events advice")
-        return main_screen
+        try:
+            click_on_image(events_2_path)
+        except ImageNotFoundException:
+            try:
+                click_on_image(events_3_path)
+            except ImageNotFoundException:
+                logger.debug("No events advice")
+                return main_screen
+            else:
+                main_screen = False
+        else:
+            main_screen = False
     else:
         main_screen = False
 
@@ -1061,7 +1073,7 @@ def do_events(main_screen, arg_is_fire):
     try:
         click_on_image(claim_dark_green_3_path, all=True)
     except ImageNotFoundException2:
-        logger.error("Unable to claim all on Decorated Heroes")
+        logger.debug("Unable to claim all on Decorated Heroes")
     
     return main_screen
 
