@@ -161,6 +161,7 @@ events_1_path = image_dir / f"events_1{image_ext}"
 events_2_path = image_dir / f"events_2{image_ext}"
 events_3_path = image_dir / f"events_3{image_ext}"
 events_4_path = image_dir / f"events_4{image_ext}"
+events_5_path = image_dir / f"events_5{image_ext}"
 decorated_heroes_path = image_dir / f"decorated_heroes{image_ext}"
 
 main_screen = True
@@ -304,7 +305,10 @@ def do_guild_expedition(main_screen, arg_is_fire):
         did_something = True
 
     if not did_something:
-        logger.error("Failed to claim or start a guild expedition")
+        logger.error(
+            "Failed to claim or start a guild expedition (maybe finished " + 
+            "for now?)"
+        )
 
     return main_screen
 
@@ -890,7 +894,7 @@ def do_oracle(main_screen, arg_is_fire):
     try:
         click_on_image(start_path)
     except ImageNotFoundException:
-        logger.error("Unable to start ritual")
+        logger.error("Unable to start ritual (maybe no one for now?)")
     else:
         logger.info("Started ritual")
     
@@ -1055,8 +1059,13 @@ def do_events(main_screen, arg_is_fire):
                 try:
                     click_on_image(events_4_path, confidence=0.95)
                 except ImageNotFoundException:
-                    logger.debug("No events advice")
-                    return main_screen
+                    try:
+                        click_on_image(events_5_path)
+                    except ImageNotFoundException:
+                        logger.debug("No events advice")
+                        return main_screen
+                    else:
+                        main_screen = False
                 else:
                     main_screen = False
             else:
