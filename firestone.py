@@ -500,7 +500,7 @@ def get_pickaxes(main_screen, arg_is_fire, from_advice=False):
                 logger.error("Failed to find guild supplies")
                 return main_screen
 
-    time.sleep(0.2)
+    time.sleep(0.5)
 
     try:
         click_on_image(claim_dark_green_2_path, confidence=0.8)
@@ -640,7 +640,7 @@ def do_map(main_screen, arg_is_fire):
     else:
         main_screen = main_screen_map
 
-    time.sleep(0.2)
+    time.sleep(0.5)
     
     
     i = 0
@@ -693,7 +693,7 @@ def do_shop(main_screen, arg_is_fire):
     
     main_screen = False
     
-    time.sleep(0.2)
+    time.sleep(0.5)
 
     try:
         click_on_image(free_path, confidence=0.6)
@@ -1223,4 +1223,4 @@ while True:
     if arg_is_fire and main_screen_real: 
         move_random_around_home()
         
-        p.click(interval=0.5)
+        p.click(interval=0.3)
