@@ -64,6 +64,7 @@ claim_dark_green_4_path = image_dir / f"claim_dark_green_4{image_ext}"
 claim_dark_green_5_path = image_dir / f"claim_dark_green_5{image_ext}"
 claim_rewards_path = image_dir / f"claim_rewards{image_ext}"
 claim_map_path = image_dir / f"claim_map{image_ext}"
+claim_research_path = image_dir / f"claim_research{image_ext}"
 
 start_path = image_dir / f"start{image_ext}"
 free_path = image_dir / f"free{image_ext}"
@@ -156,6 +157,7 @@ guardian_3_2_path = image_dir / f"guardian_3_2{image_ext}"
 guardian_3_3_path = image_dir / f"guardian_3_3{image_ext}"
 guardian_3_4_path = image_dir / f"guardian_3_4{image_ext}"
 guardian_3_5_path = image_dir / f"guardian_3_5{image_ext}"
+guardian_4_1_path = image_dir / f"guardian_4_1{image_ext}"
 
 events_1_path = image_dir / f"events_1{image_ext}"
 events_2_path = image_dir / f"events_2{image_ext}"
@@ -166,10 +168,15 @@ events_6_path = image_dir / f"events_6{image_ext}"
 events_7_path = image_dir / f"events_7{image_ext}"
 decorated_heroes_path = image_dir / f"decorated_heroes{image_ext}"
 
+research_advice_path = image_dir / f"research_advice{image_ext}"
+research_box_path = image_dir / f"research_box{image_ext}"
+research_path = image_dir / f"research{image_ext}"
+research_no_slot_path = image_dir / f"research_no_slot{image_ext}"
+
 main_screen = True
 
 
-def locateAllOnScreenAndFilterNear(path, confidence=0.9):
+def locateAllOnScreenAndFilterNear(path, confidence=0.9, delta=4):
         locations_original = p.locateAllOnScreen(str(path), confidence=confidence)
         points = []
         locations = []
@@ -180,8 +187,8 @@ def locateAllOnScreenAndFilterNear(path, confidence=0.9):
             
             for point in points:
                 if (
-                    abs(point.x - point_new.x) <= 4 and 
-                    abs(point.y - point_new.y) <= 4
+                    abs(point.x - point_new.x) <= delta and 
+                    abs(point.y - point_new.y) <= delta
                 ):
                     add = False
                     break
@@ -229,7 +236,7 @@ def is_main_screen(main_screen=None):
     res = True
     
     try:
-        p.locateOnScreen(str(guild_path))
+        p.locateOnScreen(str(guild_path), confidence=0.9)
     except ImageNotFoundException:
         res = False
     
@@ -261,9 +268,9 @@ def get_main_screen(main_screen, arg_is_fire):
         try:
             click_on_image(exit_guild_path)
         except ImageNotFoundException:
-            logger.debug("Unable to exit guid")
+            logger.debug("Unable to exit guild")
         else:
-            logger.error("Exit from guild with success")
+            logger.info("Exit from guild with success")
 
     main_screen_real = is_main_screen(main_screen)
     
@@ -326,14 +333,17 @@ def do_machine(main_screen, arg_is_fire):
     else:
         main_screen = False
 
-    time.sleep(0.2)
-
+    time.sleep(0.5)
+    
+    did_something = False
+    
     try:
         click_on_image(machine_claim_loot_path)
     except ImageNotFoundException:
         logger.debug("No machine loot")
     else:
         logger.info("Machine loot claimed")
+        did_something = True
     
     try:
         click_on_image(daily_missions_path)
@@ -378,6 +388,7 @@ def do_machine(main_screen, arg_is_fire):
                 except ImageNotFoundException:
                     pass
                 else:
+                    did_something = True
                     time.sleep(0.5)
                     break
                 
@@ -394,8 +405,11 @@ def do_machine(main_screen, arg_is_fire):
         
         scroll_left()
         time.sleep(1)
-        
+    
     logger.info(f"Liberated {n} areas")
+    
+    if not did_something:
+        logger.error("Unable to claim loot or liberate any area")
     
     return main_screen
 
@@ -432,7 +446,7 @@ def do_quest(main_screen, arg_is_fire):
             time.sleep(2)
 
     try:
-        click_on_image(quest_weekly_path)
+        click_on_image(quest_weekly_path, confidence=0.8)
     except ImageNotFoundException:
         logger.error("Failed to find weekly quest button")
     else:
@@ -587,6 +601,7 @@ def do_map_mission(mission_path, mission_type, confidence=0.7):
             point = p.center(location)
             click(point)
             time.sleep(0.5)
+            mission_started = True
             
             try:
                 click_on_image(start_path)
@@ -595,8 +610,8 @@ def do_map_mission(mission_path, mission_type, confidence=0.7):
                     click_on_image(free_orange_path)
                 except ImageNotFoundException:
                     logger.debug(f"Failed to start the {mission_type} mission")
+                    mission_started = False
                     p.press("esc")
-                    time.sleep(0.5)
                     
                     try:
                         p.locateOnScreen(str(guild_path))
@@ -606,21 +621,23 @@ def do_map_mission(mission_path, mission_type, confidence=0.7):
                         main_screen = click_on_map(None)
                         
                         if main_screen is None:
-                            return
-            else:
-                logger.info(f"Mission of type {mission_type} started")
-                mission_started = True
-                time.sleep(0.2)
+                            return mission_started
+            time.sleep(1)
+            
     except ImageNotFoundException2 as e:
         logger.debug("No {mission_type} missions")
     
-    if not mission_started:
+    if mission_started:
+        logger.info(f"Mission of type {mission_type} started")
+    else:
         logger.debug(f"Failed to start any mission of type {mission_type}")
+    
+    return mission_started
     
 
 def click_on_map(main_screen):
     try:
-        click_on_image(map_advice_path)
+        click_on_image(map_advice_path, confidence=0.8)
     except ImageNotFoundException:
         logger.debug("No map advice")
         return None
@@ -640,14 +657,14 @@ def do_map(main_screen, arg_is_fire):
     else:
         main_screen = main_screen_map
 
-    time.sleep(0.5)
+    time.sleep(1)
     
     
     i = 0
     
     while True:
         try:
-            click_on_image(claim_map_path, confidence=0.75)
+            click_on_image(claim_map_path, confidence=0.8)
         except ImageNotFoundException:
             break
         
@@ -668,14 +685,18 @@ def do_map(main_screen, arg_is_fire):
     
     time.sleep(2)
     
-    do_map_mission(map_mission_cave_path, "cave")
-    do_map_mission(map_mission_naval_path, "naval")
-    do_map_mission(map_mission_naval_2_path, "naval")
-    do_map_mission(map_mission_monster_path, "monster")
-    do_map_mission(map_mission_dragon_path, "dragon")
-    do_map_mission(map_mission_war_path, "war", confidence=0.65)
-    do_map_mission(map_mission_scout_path, "scout")
-    do_map_mission(map_mission_adventure_path, "adventure", confidence=0.65)
+    done = bool(i)
+    done = do_map_mission(map_mission_cave_path, "cave") or done
+    done = do_map_mission(map_mission_naval_path, "naval") or done
+    done = do_map_mission(map_mission_naval_2_path, "naval") or done
+    done = do_map_mission(map_mission_monster_path, "monster") or done
+    done = do_map_mission(map_mission_dragon_path, "dragon") or done
+    done = do_map_mission(map_mission_war_path, "war", confidence=0.65) or done
+    done = do_map_mission(map_mission_scout_path, "scout") or done
+    done = do_map_mission(map_mission_adventure_path, "adventure", confidence=0.65) or done
+    
+    if not done:
+        logger.error("Unable to start or claim any map mission")
 
     return main_screen
 
@@ -744,13 +765,14 @@ def do_tavern(main_screen, arg_is_fire):
     time.sleep(2)
     
     for i in range(100):
+        if i == 0:
+            log_func = logger.error
+        else:
+            log_func = logger.debug
+        
         try:
             click_on_image(tavern_get_5_tokens_path, confidence=0.7)
         except ImageNotFoundException:
-            if i == 0:
-                log_func = logger.error
-            else:
-                log_func = logger.debug
             
             log_func("Failed to get 5 tavern tokens")
             
@@ -758,11 +780,12 @@ def do_tavern(main_screen, arg_is_fire):
         
         time.sleep(2)
         p.press("esc")
+        time.sleep(1)
         
         try:
             click_on_image(n5_path)
         except ImageNotFoundException:
-            logger.error("Failed to bet 5 tavern tokens")
+            log_func("Failed to bet 5 tavern tokens")
             return main_screen
         
         time.sleep(1)
@@ -779,6 +802,8 @@ def do_tavern(main_screen, arg_is_fire):
         except ImageNotFoundException:
             logger.error("Failed to get game tokens")
             return main_screen
+        
+        time.sleep(0.5)
     
     return main_screen
 
@@ -796,17 +821,22 @@ def do_alchemist(main_screen, arg_is_fire, spend_dust):
 
     time.sleep(0.2)
     
+    done = False
+    
     for i in range(3):
         try:
             click_on_image(claim_dark_green_4_path, confidence=0.7)
             time.sleep(0.5)
+            done = True
         except ImageNotFoundException:
             try:
                 click_on_image(claim_dark_green_5_path)
                 time.sleep(0.5)
+                done = True
             except ImageNotFoundException:
                 try:
                     click_on_image(free_orange_path)
+                    done = True
                 except ImageNotFoundException:
                     break
     
@@ -817,6 +847,7 @@ def do_alchemist(main_screen, arg_is_fire, spend_dust):
     else:
         logger.info("Alchemist blood experiment started")
         time.sleep(0.5)
+        done = True
     
     if spend_dust:
         try:
@@ -826,6 +857,7 @@ def do_alchemist(main_screen, arg_is_fire, spend_dust):
         else:
             logger.info("Alchemist dust experiment started")
             time.sleep(0.5)
+            done = True
     
     try:
         click_on_image(alchemist_coin_path)
@@ -834,6 +866,10 @@ def do_alchemist(main_screen, arg_is_fire, spend_dust):
     else:
         logger.info("Alchemist coin experiment started")
         time.sleep(0.5)
+        done = True
+        
+    if not done:
+        logger.error("Unable to claim or start any Alchemist experiment")
     
     return main_screen
 
@@ -854,7 +890,7 @@ def do_engineer(main_screen, arg_is_fire):
     try:
         click_on_image(claim_green_big_path)
     except ImageNotFoundException:
-        logger.debug("Failed to claim engineer")
+        logger.error("Failed to claim engineer")
     else:
         logger.info("Engineer claimed")
     
@@ -880,31 +916,35 @@ def do_oracle(main_screen, arg_is_fire):
         logger.debug("Failed to find rituals")
         return main_screen
     
-    i = 0
+    time.sleep(0.5)
+    claimed = True
     
-    for _ in range(3):
-        try:
-            click_on_image(claim_dark_green_3_path, confidence=0.95)
-        except ImageNotFoundException:
-            break
-        else:
-            i += 1
+    try:
+        click_on_image(claim_dark_green_3_path, all=True, confidence=0.94)
+    except ImageNotFoundException2:
+        claimed = False
     
-    if not i:
-        logger.error("Failed to claim any rituals")
+    if claimed:
+        logger.info("Claimed ritual")
+        time.sleep(0.5)
     
     try:
         click_on_image(start_path)
     except ImageNotFoundException:
-        logger.error("Unable to start ritual (maybe no one for now?)")
+        if claimed:
+            logger.warning("Unable to start ritual, probably no one for now")
+        else:
+            logger.error("Unable to claim or start any ritual")
     else:
+        if not claimed:
+            logger.warning("Unable to start ritual, probably all started")
         logger.info("Started ritual")
     
     return main_screen
 
 
 
-train_free_path_confidence = 0.95
+train_free_path_confidence = 0.9
 
 
 
@@ -963,7 +1003,10 @@ def do_guardian(main_screen, arg_is_fire):
                     click_on_image(guardian_advice_3_4_path)
                 except ImageNotFoundException:
                     try:
-                        click_on_image(guardian_advice_3_5_path)
+                        click_on_image(
+                            guardian_advice_3_5_path, 
+                            confidence=0.8,
+                        )
                     except ImageNotFoundException:
                         logger.debug("No guardian advice")
                         return main_screen
@@ -1017,6 +1060,11 @@ def do_guardian(main_screen, arg_is_fire):
         
         if done:
             return main_screen
+        
+        done = do_guardian_specific(guardian_4_1_path, 4, 1, confidence=0.7)
+        
+        if done:
+            return main_screen
             
         logger.error("No free train")
     else:
@@ -1041,12 +1089,12 @@ def do_oracle_gift(main_screen, arg_is_fire):
     try:
         click_on_image(free_path, confidence=0.75)
     except ImageNotFoundException:
-        logger.debug("No oracle gift")
+        logger.error("No oracle gift")
     
     return main_screen
 
 
-def do_events(main_screen, arg_is_fire):
+def do_event(main_screen, arg_is_fire):
     main_screen = get_main_screen(main_screen, arg_is_fire)
     
     try:
@@ -1056,7 +1104,7 @@ def do_events(main_screen, arg_is_fire):
             click_on_image(events_2_path, confidence=0.95)
         except ImageNotFoundException:
             try:
-                click_on_image(events_3_path, confidence=0.8)
+                click_on_image(events_3_path, confidence=0.9)
             except ImageNotFoundException:
                 try:
                     click_on_image(events_4_path, confidence=0.95)
@@ -1087,12 +1135,12 @@ def do_events(main_screen, arg_is_fire):
     else:
         main_screen = False
 
-    time.sleep(0.5)
+    time.sleep(1)
     
     try:
-        click_on_image(decorated_heroes_path)
+        click_on_image(decorated_heroes_path, confidence=0.9)
     except ImageNotFoundException:
-        logger.debug("No Decorated Heroes event")
+        logger.error("No Decorated Heroes event")
         return main_screen
 
     time.sleep(0.5)
@@ -1101,6 +1149,73 @@ def do_events(main_screen, arg_is_fire):
         click_on_image(claim_dark_green_3_path, all=True)
     except ImageNotFoundException2:
         logger.debug("Unable to claim all on Decorated Heroes")
+    
+    return main_screen
+
+
+def do_research(main_screen, arg_is_fire):
+    main_screen = get_main_screen(main_screen, arg_is_fire)
+    
+    try:
+        click_on_image(research_advice_path, confidence=0.9)
+    except ImageNotFoundException:
+        logger.debug("No research advice")
+        return main_screen
+    else:
+        main_screen = False
+
+    time.sleep(0.5)
+    
+    scroll_right()
+    scroll_right()
+    
+    time.sleep(1)
+    
+    for _ in range(10):
+        try:
+            click_on_image(claim_research_path, confidence=0.9)
+        except ImageNotFoundException:
+            break
+        else:
+            time.sleep(0.5)
+    
+    passes = 2
+    
+    for j in range(passes):
+        try:
+            locations = locateAllOnScreenAndFilterNear(
+                research_box_path, 
+                confidence=0.3,
+                delta=100
+            )
+            
+            for i, location in enumerate(locations):
+                point = p.center(location)
+                click(point)
+                time.sleep(0.5)
+                
+                try:
+                    click_on_image(research_path, confidence=0.9)
+                except ImageNotFoundException:
+                    pass
+                else:
+                    time.sleep(1)
+                    
+                    try:
+                        p.locateOnScreen(
+                            str(research_no_slot_path), 
+                            confidence=0.9,
+                        )
+                    except ImageNotFoundException:
+                        pass
+                    else:
+                        return main_screen
+            
+            if j != passes - 1:
+                scroll_left()
+                time.sleep(1)
+        except ImageNotFoundException2:
+            pass
     
     return main_screen
 
@@ -1123,9 +1238,12 @@ def check(main_screen, arg_is_fire, spend_dust, events):
     main_screen = do_guardian(main_screen, arg_is_fire)
     main_screen = do_oracle_gift(main_screen, arg_is_fire)
     main_screen = do_oracle_gift(main_screen, arg_is_fire)
+    main_screen = do_research(main_screen, arg_is_fire)
     
     if events:
-        main_screen = do_events(main_screen, arg_is_fire)
+        main_screen = do_event(main_screen, arg_is_fire)
+    
+    main_screen = get_main_screen(main_screen, arg_is_fire)
     
     return main_screen
 
@@ -1204,7 +1322,6 @@ while True:
         main_screen_real = is_main_screen(main_screen)
         
         if main_screen_real:
-            time.sleep(0.2)
             p.moveTo(advice_down_x, advice_down_y)
             p.dragTo(advice_up_x, advice_up_y, duration=3)
             time.sleep(4)
@@ -1212,7 +1329,6 @@ while True:
             main_screen_real = is_main_screen(main_screen)
             
             if main_screen_real:
-                time.sleep(0.2)
                 p.moveTo(advice_up_x, advice_up_y)
                 p.dragTo(advice_down_x, advice_down_y, duration=3)
                 time.sleep(4)
@@ -1223,4 +1339,4 @@ while True:
     if arg_is_fire and main_screen_real: 
         move_random_around_home()
         
-        p.click(interval=0.3)
+        p.click(interval=0.4)
