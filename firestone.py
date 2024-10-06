@@ -112,7 +112,6 @@ map_mission_scout_path = image_dir / f"map_mission_scout{image_ext}"
 map_mission_monster_path = image_dir / f"map_mission_monster{image_ext}"
 map_mission_dragon_path = image_dir / f"map_mission_dragon{image_ext}"
 map_mission_naval_path = image_dir / f"map_mission_naval{image_ext}"
-map_mission_naval_2_path = image_dir / f"map_mission_naval_2{image_ext}"
 map_mission_cave_path = image_dir / f"map_mission_cave{image_ext}"
 
 shop_advice_path = image_dir / f"shop_advice{image_ext}"
@@ -158,6 +157,8 @@ guardian_3_3_path = image_dir / f"guardian_3_3{image_ext}"
 guardian_3_4_path = image_dir / f"guardian_3_4{image_ext}"
 guardian_3_5_path = image_dir / f"guardian_3_5{image_ext}"
 guardian_4_1_path = image_dir / f"guardian_4_1{image_ext}"
+guardian_4_2_path = image_dir / f"guardian_4_2{image_ext}"
+guardian_4_3_path = image_dir / f"guardian_4_3{image_ext}"
 
 events_1_path = image_dir / f"events_1{image_ext}"
 events_2_path = image_dir / f"events_2{image_ext}"
@@ -172,6 +173,9 @@ research_advice_path = image_dir / f"research_advice{image_ext}"
 research_box_path = image_dir / f"research_box{image_ext}"
 research_path = image_dir / f"research{image_ext}"
 research_no_slot_path = image_dir / f"research_no_slot{image_ext}"
+
+chaos_advice_path = image_dir / f"chaos_advice{image_ext}"
+chaos_hit_path = image_dir / f"chaos_hit{image_ext}"
 
 main_screen = True
 
@@ -522,12 +526,12 @@ def get_pickaxes(main_screen, arg_is_fire, from_advice=False):
         logger.error("Failed to get pickaxes")
     else:
         logger.info("Piackaxes claimed")
-        main_screen = hit_the_crystal(main_screen, arg_is_fire, from_advice=False)
+        main_screen = hit_crystal(main_screen, arg_is_fire, from_advice=False)
 
     return main_screen
 
 
-def hit_the_crystal(main_screen, arg_is_fire, from_advice=True):
+def hit_crystal(main_screen, arg_is_fire, from_advice=True):
     main_screen = get_main_screen(main_screen, arg_is_fire)
     
     if from_advice:
@@ -556,12 +560,12 @@ def hit_the_crystal(main_screen, arg_is_fire, from_advice=True):
             return main_screen
         
         
-    time.sleep(0.2)
+    time.sleep(0.5)
     
     
-    hits = 1
+    hits = 0
 
-    while True:
+    for _ in range(100):
         try:
             p.locateOnScreen(str(manual_path), confidence=0.6)
         except ImageNotFoundException:
@@ -570,22 +574,33 @@ def hit_the_crystal(main_screen, arg_is_fire, from_advice=True):
             except ImageNotFoundException:
                 logger.info("Crystal hit finished")
                 break
+        
         try:
             click_on_image(crystal_hit_path, confidence=0.9)
         except ImageNotFoundException:
             try:
                 click_on_image(crystal_hit_2_path)
             except ImageNotFoundException:
-                logger.info("Crystal hit finished")
                 break
         
-        logger.info(f"Hit the crystal number {hits}")
         time.sleep(3)
 
 
         hits += 1
     
+    logger.info(f"Hit the crystal {hits} times")
+    
     return main_screen
+
+
+def claim_map_rewards():
+    try:
+        click_on_image(claim_rewards_path, confidence=0.7)
+    except ImageNotFoundException:
+        logger.error("Unable to confirm map reward claim")
+        return False
+    
+    return True
 
 
 def do_map_mission(mission_path, mission_type, confidence=0.7):
@@ -622,6 +637,9 @@ def do_map_mission(mission_path, mission_type, confidence=0.7):
                         
                         if main_screen is None:
                             return mission_started
+                else:
+                    time.sleep(2)
+                    claim_map_rewards()
             time.sleep(1)
             
     except ImageNotFoundException2 as e:
@@ -672,10 +690,9 @@ def do_map(main_screen, arg_is_fire):
         
         time.sleep(2)
         
-        try:
-            click_on_image(claim_rewards_path, confidence=0.7)
-        except ImageNotFoundException:
-            logger.error("Unable to confirm map reward claim")
+        claimed = claim_map_rewards()
+        
+        if not claimed:
             break
         
         time.sleep(0.2)
@@ -688,11 +705,10 @@ def do_map(main_screen, arg_is_fire):
     done = bool(i)
     done = do_map_mission(map_mission_cave_path, "cave") or done
     done = do_map_mission(map_mission_naval_path, "naval") or done
-    done = do_map_mission(map_mission_naval_2_path, "naval") or done
     done = do_map_mission(map_mission_monster_path, "monster") or done
     done = do_map_mission(map_mission_dragon_path, "dragon") or done
-    done = do_map_mission(map_mission_war_path, "war", confidence=0.65) or done
     done = do_map_mission(map_mission_scout_path, "scout") or done
+    done = do_map_mission(map_mission_war_path, "war", confidence=0.65) or done
     done = do_map_mission(map_mission_adventure_path, "adventure", confidence=0.65) or done
     
     if not done:
@@ -1061,6 +1077,16 @@ def do_guardian(main_screen, arg_is_fire):
         if done:
             return main_screen
         
+        done = do_guardian_specific(guardian_4_3_path, 4, 3, confidence=0.7)
+        
+        if done:
+            return main_screen
+        
+        done = do_guardian_specific(guardian_4_2_path, 4, 2, confidence=0.7)
+        
+        if done:
+            return main_screen
+        
         done = do_guardian_specific(guardian_4_1_path, 4, 1, confidence=0.7)
         
         if done:
@@ -1189,6 +1215,8 @@ def do_research(main_screen, arg_is_fire):
                 delta=100
             )
             
+            random.shuffle(locations)
+            
             for i, location in enumerate(locations):
                 point = p.center(location)
                 click(point)
@@ -1219,11 +1247,44 @@ def do_research(main_screen, arg_is_fire):
     
     return main_screen
 
+
+def hit_chaos(main_screen, arg_is_fire):
+    main_screen = get_main_screen(main_screen, arg_is_fire)
+    
+    try:
+        click_on_image(chaos_advice_path, confidence=0.9)
+    except ImageNotFoundException:
+        logger.debug("No chaos advice")
+        return main_screen
+    else:
+        main_screen = False
+        
+        
+    time.sleep(0.5)
+    
+    
+    hits = 0
+
+    for _ in range(100):
+        try:
+            click_on_image(chaos_hit_path, confidence=0.9)
+        except ImageNotFoundException:
+            break
+        
+        time.sleep(5)
+
+
+        hits += 1
+        
+    logger.info(f"Hit chaos {hits} times")
+    
+    return main_screen
+
 def check(main_screen, arg_is_fire, spend_dust, events):
     main_screen = do_guild_expedition(main_screen, arg_is_fire)
     main_screen = do_machine(main_screen, arg_is_fire)
     main_screen = do_quest(main_screen, arg_is_fire)
-    main_screen = hit_the_crystal(main_screen, arg_is_fire)
+    main_screen = hit_crystal(main_screen, arg_is_fire)
     main_screen = get_pickaxes(main_screen, arg_is_fire, from_advice=True)
     main_screen = do_map(main_screen, arg_is_fire)
     main_screen = do_shop(main_screen, arg_is_fire)
@@ -1239,6 +1300,7 @@ def check(main_screen, arg_is_fire, spend_dust, events):
     main_screen = do_oracle_gift(main_screen, arg_is_fire)
     main_screen = do_oracle_gift(main_screen, arg_is_fire)
     main_screen = do_research(main_screen, arg_is_fire)
+    main_screen = hit_chaos(main_screen, arg_is_fire)
     
     if events:
         main_screen = do_event(main_screen, arg_is_fire)
