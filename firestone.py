@@ -832,7 +832,7 @@ def do_alchemist(main_screen, arg_is_fire, spend_dust):
     main_screen = get_main_screen(main_screen, arg_is_fire)
     
     try:
-        click_on_image(alchemist_advice_path)
+        click_on_image(alchemist_advice_path, confidence=0.8)
     except ImageNotFoundException:
         logger.debug("No alchemist advice")
         return main_screen
@@ -1217,7 +1217,7 @@ def do_research(main_screen, arg_is_fire):
         try:
             locations = locateAllOnScreenAndFilterNear(
                 research_box_path, 
-                confidence=0.27,
+                confidence=0.26,
                 delta=100
             )
             
