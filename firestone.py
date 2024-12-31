@@ -42,6 +42,11 @@ center_left_y = int(coordinates_conf["center_left_y"])
 center_right_x = int(coordinates_conf["center_right_x"])
 center_right_y = int(coordinates_conf["center_right_y"])
 
+map_move_left_x = int(coordinates_conf["map_move_left_x"])
+map_move_left_y = int(coordinates_conf["map_move_left_y"])
+map_move_up_x = int(coordinates_conf["map_move_up_x"])
+map_move_up_y = int(coordinates_conf["map_move_up_y"])
+
 image_ext = ".png"
 
 guild_path = image_dir / f"guild{image_ext}"
@@ -243,6 +248,13 @@ def locateOnScreen(path, confidence=0.9):
     p.locateOnScreen(str(path), confidence=0.9)
 
 
+def dragTo(*args, duration=None, **kwargs):
+    if duration is None:
+        duration = 5
+    
+    p.dragTo(*args, duration=duration, **kwargs)
+
+
 def is_main_screen(main_screen=None):
     if main_screen is False:
         return main_screen
@@ -266,13 +278,13 @@ def move_random_around_home():
 
 def scroll_right():
     p.moveTo(center_left_x, center_left_y)
-    p.dragTo(center_right_x, center_right_y, duration=5)
+    dragTo(center_right_x, center_right_y)
     time.sleep(0.5)
 
 
 def scroll_left():
     p.moveTo(center_right_x, center_right_y)
-    p.dragTo(center_left_x, center_left_y, duration=5)
+    dragTo(center_left_x, center_left_y)
     time.sleep(0.5)
 
 
@@ -687,6 +699,12 @@ def do_map(main_screen, arg_is_fire):
 
     time.sleep(1)
     
+    # center the map
+    p.moveTo(map_move_left_x, map_move_left_y)
+    dragTo(map_move_up_x, map_move_left_y)
+    time.sleep(0.5)
+    dragTo(map_move_up_x, map_move_up_y)
+    time.sleep(0.5)
     
     i = 0
     
@@ -1484,8 +1502,9 @@ def main():
             main_screen_real = is_main_screen(main_screen)
             
             if main_screen_real:
+                duration_advice = 3
                 p.moveTo(advice_down_x, advice_down_y)
-                p.dragTo(advice_up_x, advice_up_y, duration=3)
+                dragTo(advice_up_x, advice_up_y, duration=duration_advice)
                 time.sleep(4)
                 
                 main_screen = check(
@@ -1500,7 +1519,13 @@ def main():
                 
                 if main_screen_real:
                     p.moveTo(advice_up_x, advice_up_y)
-                    p.dragTo(advice_down_x, advice_down_y, duration=3)
+                    
+                    dragTo(
+                        advice_down_x, 
+                        advice_down_y, 
+                        duration=duration_advice
+                    )
+                    
                     time.sleep(4)
                     prev_time = time.time()
         
