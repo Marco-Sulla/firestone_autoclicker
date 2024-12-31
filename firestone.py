@@ -189,6 +189,16 @@ arena_advice_path = image_dir / f"arena_advice{image_ext}"
 arena_fight_start_path = image_dir / f"arena_fight_start{image_ext}"
 arena_fight_path = image_dir / f"arena_fight{image_ext}"
 
+upgrade_path = image_dir / f"upgrade{image_ext}"
+next_milestone_path = image_dir / f"next_milestone{image_ext}"
+confirm_path = image_dir / f"confirm{image_ext}"
+start_now_path = image_dir / f"start_now{image_ext}"
+upgrade_hero_path = image_dir / f"upgrade_hero{image_ext}"
+upgrade_max_path = image_dir / f"upgrade_max{image_ext}"
+boss_path = image_dir / f"boss{image_ext}"
+epic_prestige_path = image_dir / f"epic_prestige{image_ext}"
+firestone_advice_path = image_dir / f"firestone_advice{image_ext}"
+
 
 def locateAllOnScreenAndFilterNear(path, confidence=0.9, delta=4):
     try:
@@ -245,7 +255,12 @@ def click_on_image(image, all=False, confidence=0.9):
 
 
 def locateOnScreen(path, confidence=0.9):
-    p.locateOnScreen(str(path), confidence=0.9)
+    try:
+        p.locateOnScreen(str(path), confidence=confidence)
+    except ImageNotFoundException:
+        return False
+    
+    return True
 
 
 def dragTo(*args, duration=None, **kwargs):
@@ -259,14 +274,7 @@ def is_main_screen(main_screen=None):
     if main_screen is False:
         return main_screen
     
-    res = True
-    
-    try:
-        locateOnScreen(guild_path)
-    except ImageNotFoundException:
-        res = False
-    
-    return res
+    return locateOnScreen(guild_path)
 
 
 def move_random_around_home():
@@ -536,9 +544,7 @@ def get_pickaxes(main_screen, arg_is_fire, from_advice=False):
         try:
             click_on_image(guild_supplies_path)
         except ImageNotFoundException:
-            try:
-                locateOnScreen(guild_supplies_2_path)
-            except ImageNotFoundException:
+            if not locateOnScreen(guild_supplies_2_path):
                 logger.error("Failed to find guild supplies")
                 return main_screen
 
@@ -590,14 +596,13 @@ def hit_crystal(main_screen, arg_is_fire, from_advice=True):
     hits = 0
 
     for _ in range(100):
-        try:
-            locateOnScreen(manual_path, confidence=0.6)
-        except ImageNotFoundException:
-            try:
-                locateOnScreen(manual2_path, confidence=0.6)
-            except ImageNotFoundException:
-                logger.info("Crystal hit finished")
-                break
+        if not locateOnScreen(manual_path, confidence=0.6):
+            break
+        
+        if not locateOnScreen(manual2_path, confidence=0.6):
+            break
+        
+        logger.info("Crystal hit finished")
         
         try:
             click_on_image(crystal_hit_path)
@@ -647,11 +652,7 @@ def do_map_mission(mission_path, mission_type, confidence=0.7):
                 already_sleeped = 0.5
                 time.sleep(already_sleeped)
                 
-                try:
-                    locateOnScreen(guild_path)
-                except ImageNotFoundException:
-                    pass
-                else:
+                if locateOnScreen(guild_path):
                     main_screen = click_on_map(None)
                     
                     if main_screen is None:
@@ -1248,17 +1249,10 @@ def do_research(main_screen, arg_is_fire):
                 try:
                     click_on_image(research_path)
                 except ImageNotFoundException:
-                    press_esc = False
+                    press_esc = locateOnScreen(research_maxed_path)
                     
-                    try:
-                        locateOnScreen(research_maxed_path)
-                        press_esc = True
-                    except ImageNotFoundException:
-                        try:
-                            locateOnScreen(research_in_progress_path)
-                            press_esc = True
-                        except ImageNotFoundException:
-                            pass
+                    if not press_esc:
+                        press_esc = locateOnScreen(research_in_progress_path)
                     
                     if press_esc:
                         p.press("esc")
@@ -1267,11 +1261,7 @@ def do_research(main_screen, arg_is_fire):
                     did_something = True
                     time.sleep(1)
                     
-                    try:
-                        locateOnScreen(research_no_slot_path)
-                    except ImageNotFoundException:
-                        pass
-                    else:
+                    if locateOnScreen(research_no_slot_path):
                         return main_screen
             
             if j != passes - 1:
@@ -1389,6 +1379,99 @@ def do_arena(main_screen, arg_is_fire):
     
     return main_screen
 
+
+def prestige(main_screen, arg_is_fire):
+    get_main_screen(main_screen, arg_is_fire)
+    p.press("u")
+    main_screen = False
+    time.sleep(1)
+    
+    for _ in range(100):
+        if locateOnScreen(upgrade_max_path):
+            logger.debug("Max heroes upgrade multiplier found")
+            break
+        
+        try:
+            click_on_image(upgrade_path)
+        except ImageNotFoundException:
+            try:
+                click_on_image(next_milestone_path)
+            except ImageNotFoundException:
+                logger.error("Unable to cycle heroes upgrade multipliers")
+                break
+        
+        time.sleep(0.2)
+    
+    try:
+        locations = locateAllOnScreenAndFilterNear(
+            upgrade_hero_path, 
+            confidence = 0.5,
+            delta = 10,
+        )
+    except ImageNotFoundException:
+        logger.debug("No upgrades for heroes")
+    else:
+        for location in locations:
+            click_on_location(location)
+            time.sleep(0.5)
+        
+        logger.debug(f"Upgraded heroes {len(locations)} times")
+    
+    try:
+        click_on_image(boss_path)
+    except ImageNotFoundException:
+        logger.debug(f"Unable to find Boss button")
+    else:
+        logger.debug(f"Clicked on Boss button")
+    
+    try:
+        click_on_image(firestone_advice_path)
+    except ImageNotFoundException:
+        logger.debug("Unable to find prestige advice")
+    else:
+        time.sleep(0.5)
+        main_screen = get_main_screen(main_screen, arg_is_fire)
+        time.sleep(0.5)
+    
+        try:
+            click_on_image(firestone_advice_path)
+        except ImageNotFoundException:
+            logger.debug("Unable to find prestige advice")
+        else:
+            main_screen = False
+            time.sleep(0.5)
+            
+            try:
+                click_on_image(epic_prestige_path)
+            except ImageNotFoundException:
+                logger.error("Unable to find epic prestige button")
+            else:
+                time.sleep(0.5)
+                
+                try:
+                    click_on_image(confirm_path)
+                except ImageNotFoundException:
+                    logger.error("Unable to find confirm prestige button")
+                else:
+                    logger.info("Prestige done!")
+                
+                for _ in range(100):
+                    try:
+                        click_on_image(start_now_path)
+                    except ImageNotFoundException:
+                        pass
+                    else:
+                        break
+                    
+                    time.sleep(0.2)
+                else:
+                    logger.error("Unable to find 'Start now' button")
+                    
+                        
+    
+    return main_screen
+
+
 def check(main_screen, arg_is_fire, spend_dust, events, no_tavern):
     main_screen = do_guild_expedition(main_screen, arg_is_fire)
     main_screen = do_machine(main_screen, arg_is_fire)
@@ -1413,6 +1496,8 @@ def check(main_screen, arg_is_fire, spend_dust, events, no_tavern):
     
     if events:
         main_screen = do_event(main_screen, arg_is_fire)
+    
+    main_screen = prestige(main_screen, arg_is_fire)
     
     main_screen = get_main_screen(main_screen, arg_is_fire)
     
