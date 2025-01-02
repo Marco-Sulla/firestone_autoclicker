@@ -16,6 +16,8 @@
 10. `python firestone.py`
 11. enjoy!
 
+If you want auto-prestige, `python firestone.py -p`
+
 If you want to make the guardian hit for faster restart after prestige, `python firestone.py fire`
 
 If you want to start also dust researches in Alchemist, `python firestone.py -d`
