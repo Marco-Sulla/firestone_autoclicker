@@ -1288,15 +1288,18 @@ def hit_chaos(main_screen, arg_is_fire):
         main_screen = False
         
         
-    time.sleep(0.5)
+    time.sleep(1.5)
     
     
     hits = 0
 
     for _ in range(100):
         try:
-            click_on_image(chaos_hit_path)
+            click_on_image(chaos_hit_path, confidence=0.8)
         except ImageNotFoundException:
+            break
+        
+        if not locateOnScreen(manual_path):
             break
         
         time.sleep(5)
@@ -1392,10 +1395,10 @@ def prestige(main_screen, arg_is_fire):
             break
         
         try:
-            click_on_image(upgrade_path)
+            click_on_image(upgrade_path, confidence=0.8)
         except ImageNotFoundException:
             try:
-                click_on_image(next_milestone_path)
+                click_on_image(next_milestone_path, confidence=0.8)
             except ImageNotFoundException:
                 logger.error("Unable to cycle heroes upgrade multipliers")
                 break
@@ -1411,18 +1414,16 @@ def prestige(main_screen, arg_is_fire):
     except ImageNotFoundException:
         logger.debug("No upgrades for heroes")
     else:
-        for location in locations:
+        click_on_location(locations[0])
+        time.sleep(0.5)
+        
+        del locations[0]
+        
+        for location in reversed(locations):
             click_on_location(location)
             time.sleep(0.5)
         
-        logger.debug(f"Upgraded heroes {len(locations)} times")
-    
-    try:
-        click_on_image(boss_path)
-    except ImageNotFoundException:
-        logger.debug(f"Unable to find Boss button")
-    else:
-        logger.debug(f"Clicked on Boss button")
+        logger.debug(f"Upgraded heroes")
     
     try:
         click_on_image(firestone_advice_path)
@@ -1472,7 +1473,14 @@ def prestige(main_screen, arg_is_fire):
     return main_screen
 
 
-def check(main_screen, arg_is_fire, spend_dust, events, no_tavern):
+def check(
+    main_screen, 
+    arg_is_fire, 
+    spend_dust, 
+    events, 
+    no_tavern, 
+    do_prestige
+):
     main_screen = do_guild_expedition(main_screen, arg_is_fire)
     main_screen = do_machine(main_screen, arg_is_fire)
     main_screen = do_quest(main_screen, arg_is_fire)
@@ -1497,7 +1505,8 @@ def check(main_screen, arg_is_fire, spend_dust, events, no_tavern):
     if events:
         main_screen = do_event(main_screen, arg_is_fire)
     
-    main_screen = prestige(main_screen, arg_is_fire)
+    if do_prestige:
+        main_screen = prestige(main_screen, arg_is_fire)
     
     main_screen = get_main_screen(main_screen, arg_is_fire)
     
@@ -1536,6 +1545,13 @@ parser.add_argument(
     help="Enables auto-clicking on the Events (for now only Decorated Heroes)"
 )
 
+parser.add_argument(
+    "-p", 
+    "--prestige", 
+    action="store_true", 
+    help="Enables auto-upgrade of heroes and auto-prestige"
+)
+
 def main():
     args = parser.parse_args()
 
@@ -1553,6 +1569,7 @@ def main():
     spend_dust = args.spend_dust
     no_tavern = args.no_tavern
     events = args.events
+    do_prestige = args.prestige
 
     wait_sec = 100 if arg_is_fire else 3
     wait_sec_packaxes = 5737
@@ -1581,7 +1598,8 @@ def main():
                 arg_is_fire, 
                 spend_dust, 
                 events,
-                no_tavern
+                no_tavern,
+                do_prestige,
             )
             
             main_screen_real = is_main_screen(main_screen)
@@ -1597,7 +1615,8 @@ def main():
                     arg_is_fire, 
                     spend_dust, 
                     events,
-                    no_tavern
+                    no_tavern,
+                    False,
                 )
                 
                 main_screen_real = is_main_screen(main_screen)
