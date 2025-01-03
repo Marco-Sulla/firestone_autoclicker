@@ -1512,16 +1512,17 @@ def check(
     
     return main_screen
 
+
 parser = argparse.ArgumentParser(
     prog='firestone.py',
     description='Automates the Firestone idle game',
 )
 
 parser.add_argument(
-    "command", 
-    choices=("fire",), 
+    "command",
+    choices=("fire", "pre"),
     nargs="?",
-    help="Make the guardian attack",
+    help="Make the guardian attack. 'pre' is equivalent to 'fire -p'",
 )
 
 parser.add_argument(
@@ -1564,12 +1565,18 @@ def main():
     p.keyUp("alt")
 
     time.sleep(0.5)
-
-    arg_is_fire = args.command == "fire"
+    
+    arg_is_fire = False
     spend_dust = args.spend_dust
     no_tavern = args.no_tavern
     events = args.events
     do_prestige = args.prestige
+    
+    if args.command == "fire":
+        arg_is_fire = True
+    elif args.command == "pre":
+        arg_is_fire = True
+        do_prestige = True
 
     wait_sec = 100 if arg_is_fire else 3
     wait_sec_packaxes = 5737

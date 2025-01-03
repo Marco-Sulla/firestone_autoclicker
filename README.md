@@ -25,3 +25,5 @@ If you want to start also dust researches in Alchemist, `python firestone.py -d`
 If you want to disable automatic Tavern, `python firestone.py -t`
 
 If you want to automate claming in events (only Decorated Heroes for now), `python firestone.py -e`
+
+`python firestone.py pre` is equivalent to `python firestone.py fire -p`
