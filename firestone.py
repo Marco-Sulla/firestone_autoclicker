@@ -8,6 +8,7 @@ import logging
 import random
 import configparser
 import argparse
+import json
 
 handler = logging.StreamHandler()
 formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
@@ -27,6 +28,7 @@ config = configparser.ConfigParser()
 config.read(ini_path)
 config.sections()
 coordinates_conf = config["coordinates"]
+prestige_conf = config["prestige"]
 
 home_x = int(coordinates_conf["home_x"])
 home_y = int(coordinates_conf["home_y"])
@@ -46,6 +48,8 @@ map_move_left_x = int(coordinates_conf["map_move_left_x"])
 map_move_left_y = int(coordinates_conf["map_move_left_y"])
 map_move_up_x = int(coordinates_conf["map_move_up_x"])
 map_move_up_y = int(coordinates_conf["map_move_up_y"])
+
+preferred_heroes = json.loads(prestige_conf["preferred_heroes"])
 
 image_ext = ".png"
 
@@ -1236,7 +1240,7 @@ def do_research(main_screen, arg_is_fire):
         try:
             locations = locateAllOnScreenAndFilterNear(
                 research_box_path, 
-                confidence=0.26,
+                confidence=0.28,
                 delta=100
             )
             
@@ -1405,25 +1409,25 @@ def prestige(main_screen, arg_is_fire):
         
         time.sleep(0.2)
     
-    try:
-        locations = locateAllOnScreenAndFilterNear(
-            upgrade_hero_path, 
-            confidence = 0.5,
-            delta = 10,
-        )
-    except ImageNotFoundException:
-        logger.debug("No upgrades for heroes")
-    else:
-        click_on_location(locations[0])
-        time.sleep(0.5)
-        
-        del locations[0]
-        
-        for location in reversed(locations):
-            click_on_location(location)
-            time.sleep(0.5)
-        
-        logger.debug(f"Upgraded heroes")
+    for _ in range(10000):
+        try:
+            locations = locateAllOnScreenAndFilterNear(
+                upgrade_hero_path, 
+                confidence = 0.5,
+                delta = 10,
+            )
+        except ImageNotFoundException:
+            logger.debug("No upgrades for heroes")
+            break
+        else:
+            if len(locations) != 7:
+                break
+            
+            for hero_pos in preferred_heroes:
+                click_on_location(locations[hero_pos-1])
+                time.sleep(0.2)
+            
+            logger.debug(f"Upgraded heroes")
     
     try:
         click_on_image(firestone_advice_path)
