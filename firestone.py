@@ -93,6 +93,7 @@ train_free_path = image_dir / f"train_free{image_ext}"
 get_game_tokens_path = image_dir / f"get_game_tokens{image_ext}"
 research_maxed_path = image_dir / f"research_maxed{image_ext}"
 research_in_progress_path = image_dir / f"research_in_progress{image_ext}"
+research_is_locked_path = image_dir / f"research_is_locked{image_ext}"
 
 machine_advice_path = image_dir / f"machine_advice{image_ext}"
 machine_claim_loot_path = image_dir / f"machine_claim_loot{image_ext}"
@@ -1240,7 +1241,7 @@ def do_research(main_screen, arg_is_fire):
         try:
             locations = locateAllOnScreenAndFilterNear(
                 research_box_path, 
-                confidence=0.28,
+                confidence=0.33,
                 delta=100
             )
             
@@ -1257,6 +1258,9 @@ def do_research(main_screen, arg_is_fire):
                     
                     if not press_esc:
                         press_esc = locateOnScreen(research_in_progress_path)
+                    
+                    if not press_esc:
+                        press_esc = locateOnScreen(research_is_locked_path)
                     
                     if press_esc:
                         p.press("esc")
