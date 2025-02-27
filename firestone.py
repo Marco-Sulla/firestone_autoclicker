@@ -94,6 +94,7 @@ get_game_tokens_path = image_dir / f"get_game_tokens{image_ext}"
 research_maxed_path = image_dir / f"research_maxed{image_ext}"
 research_in_progress_path = image_dir / f"research_in_progress{image_ext}"
 research_is_locked_path = image_dir / f"research_is_locked{image_ext}"
+mission_rewards_path = image_dir / f"mission_rewards{image_ext}"
 
 machine_advice_path = image_dir / f"machine_advice{image_ext}"
 machine_claim_loot_path = image_dir / f"machine_claim_loot{image_ext}"
@@ -645,11 +646,11 @@ def do_map_mission(mission_path, mission_type, confidence=0.7):
         already_sleeped = 0
         
         try:
-            click_on_image(start_path)
+            click_on_image(free_orange_path)
             missions_started += 1
         except ImageNotFoundException:
             try:
-                click_on_image(free_orange_path)
+                click_on_image(start_path)
                 missions_started += 1
             except ImageNotFoundException:
                 logger.debug(f"Failed to start the {mission_type} mission")
@@ -665,9 +666,9 @@ def do_map_mission(mission_path, mission_type, confidence=0.7):
                             "Guild button detected, but no map advice"
                         )
                         return bool(missions_started)
-            else:
-                time.sleep(2)
-                p.press("esc")
+        else:
+            time.sleep(2)
+            p.press("esc")
         
         time.sleep(1 - already_sleeped)
     
@@ -709,6 +710,11 @@ def do_map(main_screen, arg_is_fire):
     p.moveTo(map_move_left_x, map_move_left_y)
     dragTo(map_move_up_x, map_move_left_y)
     time.sleep(0.5)
+    
+    if locateOnScreen(mission_rewards_path, confidence=0.8):
+        p.press("esc")
+        time.sleep(0.5)
+    
     dragTo(map_move_up_x, map_move_up_y)
     time.sleep(0.5)
     
@@ -1344,7 +1350,7 @@ def do_arena(main_screen, arg_is_fire):
         
         fight_location = fight_locations[-1]
         click_on_location(fight_location)
-        time.sleep(0.5)
+        time.sleep(1)
         
         try:
             click_on_image(arena_fight_start_path)
@@ -1386,7 +1392,7 @@ def do_arena(main_screen, arg_is_fire):
     logger.info(f"Fighted in arena {n} times")
     
     if n == 0:
-        logger.error("Unable to do any fight in area")
+        logger.error("Unable to do any fight in arena")
     
     return main_screen
 

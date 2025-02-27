@@ -1,5 +1,20 @@
 # firestone_autoclicker
 
+Features:
+* auto-prestige
+* claims and starts guild expeditions
+* does map missions
+* claims and starts oracle rituals
+* does machine daily missions
+* claim and starts the firestone researches
+* fights in the arena
+* gets the free pickaxes and hit the crystal
+* gets daily and weekly rewards
+* spends the beer in the tavern
+* uses the free train on the guardians
+* hits the chaos
+* and something more
+
 ## Steps to make it working from source code
 
 ### For Windows
