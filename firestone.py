@@ -42,6 +42,7 @@ advice_down_y = int(coordinates_conf["advice_down_y"])
 center_left_x = int(coordinates_conf["center_left_x"])
 center_left_y = int(coordinates_conf["center_left_y"])
 center_right_x = int(coordinates_conf["center_right_x"])
+center_right_x_research = int(coordinates_conf["center_right_x_research"])
 center_right_y = int(coordinates_conf["center_right_y"])
 
 map_move_left_x = int(coordinates_conf["map_move_left_x"])
@@ -296,13 +297,23 @@ def scroll_right():
     time.sleep(0.5)
 
 
-def scroll_left():
-    p.moveTo(center_right_x, center_right_y)
+def scroll_left(scope=None):
+    if scope == "research":
+        right_x = center_right_x_research
+    else:
+        right_x = center_right_x
+    
+    p.moveTo(right_x, center_right_y)
     dragTo(center_left_x, center_left_y)
     time.sleep(0.5)
 
 
-def get_main_screen(main_screen, arg_is_fire):
+def press_3(do_prestige, main_screen_real):
+    if not do_prestige and main_screen_real:
+        p.press("3")
+
+
+def get_main_screen(main_screen, arg_is_fire, do_prestige):
     if not main_screen:
         for _ in range(15):
             p.press("esc")
@@ -319,12 +330,14 @@ def get_main_screen(main_screen, arg_is_fire):
     if arg_is_fire and main_screen_real:
         move_random_around_home()
         p.click(interval=0.5)
+    
+    press_3(do_prestige, main_screen_real)
 
     return True
 
 
-def do_guild_expedition(main_screen, arg_is_fire):
-    main_screen = get_main_screen(main_screen, arg_is_fire)
+def do_guild_expedition(main_screen, arg_is_fire, do_prestige):
+    main_screen = get_main_screen(main_screen, arg_is_fire, do_prestige)
     
     try:
         click_on_image(guild_expedition_advice_path)
@@ -364,8 +377,8 @@ def do_guild_expedition(main_screen, arg_is_fire):
     return main_screen
 
 
-def do_machine(main_screen, arg_is_fire):
-    main_screen = get_main_screen(main_screen, arg_is_fire)
+def do_machine(main_screen, arg_is_fire, do_prestige):
+    main_screen = get_main_screen(main_screen, arg_is_fire, do_prestige)
     
     try:
         click_on_image(machine_advice_path, confidence=0.8)
@@ -456,8 +469,8 @@ def do_machine(main_screen, arg_is_fire):
     return main_screen
 
 
-def do_quest(main_screen, arg_is_fire):
-    main_screen = get_main_screen(main_screen, arg_is_fire)
+def do_quest(main_screen, arg_is_fire, do_prestige):
+    main_screen = get_main_screen(main_screen, arg_is_fire, do_prestige)
     
     try:
         click_on_image(quest_advice_path)
@@ -509,8 +522,8 @@ def do_quest(main_screen, arg_is_fire):
     return main_screen
 
 
-def get_pickaxes(main_screen, arg_is_fire, from_advice=False):
-    main_screen = get_main_screen(main_screen, arg_is_fire)
+def get_pickaxes(main_screen, arg_is_fire, do_prestige, from_advice=False):
+    main_screen = get_main_screen(main_screen, arg_is_fire, do_prestige)
     
     if from_advice:
         try:
@@ -562,13 +575,19 @@ def get_pickaxes(main_screen, arg_is_fire, from_advice=False):
         logger.error("Failed to get pickaxes")
     else:
         logger.info("Piackaxes claimed")
-        main_screen = hit_crystal(main_screen, arg_is_fire, from_advice=False)
+        
+        main_screen = hit_crystal(
+            main_screen, 
+            arg_is_fire, 
+            do_prestige, 
+            from_advice=False
+        )
 
     return main_screen
 
 
-def hit_crystal(main_screen, arg_is_fire, from_advice=True):
-    main_screen = get_main_screen(main_screen, arg_is_fire)
+def hit_crystal(main_screen, arg_is_fire, do_prestige, from_advice=True):
+    main_screen = get_main_screen(main_screen, arg_is_fire, do_prestige)
     
     if from_advice:
         try:
@@ -694,8 +713,8 @@ def click_on_map(main_screen):
     return main_screen
 
 
-def do_map(main_screen, arg_is_fire):
-    main_screen = get_main_screen(main_screen, arg_is_fire)
+def do_map(main_screen, arg_is_fire, do_prestige):
+    main_screen = get_main_screen(main_screen, arg_is_fire, do_prestige)
     
     main_screen_map = click_on_map(main_screen)
     
@@ -753,8 +772,8 @@ def do_map(main_screen, arg_is_fire):
     return main_screen
 
 
-def do_shop(main_screen, arg_is_fire):
-    main_screen = get_main_screen(main_screen, arg_is_fire)
+def do_shop(main_screen, arg_is_fire, do_prestige):
+    main_screen = get_main_screen(main_screen, arg_is_fire, do_prestige)
     
     logger.debug("Clicking on shop advice")
     
@@ -776,8 +795,8 @@ def do_shop(main_screen, arg_is_fire):
     return main_screen
 
 
-def do_daily_reward(main_screen, arg_is_fire):
-    main_screen = get_main_screen(main_screen, arg_is_fire)
+def do_daily_reward(main_screen, arg_is_fire, do_prestige):
+    main_screen = get_main_screen(main_screen, arg_is_fire, do_prestige)
     
     try:
         click_on_image(daily_reward_advice_path)
@@ -801,8 +820,8 @@ def do_daily_reward(main_screen, arg_is_fire):
     return main_screen
 
 
-def do_tavern(main_screen, arg_is_fire):
-    main_screen = get_main_screen(main_screen, arg_is_fire)
+def do_tavern(main_screen, arg_is_fire, do_prestige):
+    main_screen = get_main_screen(main_screen, arg_is_fire, do_prestige)
     
     try:
         click_on_image(tavern_advice_path)
@@ -858,8 +877,8 @@ def do_tavern(main_screen, arg_is_fire):
     return main_screen
 
 
-def do_alchemist(main_screen, arg_is_fire, spend_dust):
-    main_screen = get_main_screen(main_screen, arg_is_fire)
+def do_alchemist(main_screen, arg_is_fire, spend_dust, do_prestige):
+    main_screen = get_main_screen(main_screen, arg_is_fire, do_prestige)
     
     try:
         click_on_image(alchemist_advice_path, confidence=0.8)
@@ -924,8 +943,8 @@ def do_alchemist(main_screen, arg_is_fire, spend_dust):
     return main_screen
 
 
-def do_engineer(main_screen, arg_is_fire):
-    main_screen = get_main_screen(main_screen, arg_is_fire)
+def do_engineer(main_screen, arg_is_fire, do_prestige):
+    main_screen = get_main_screen(main_screen, arg_is_fire, do_prestige)
     
     try:
         click_on_image(engineer_advice_path)
@@ -947,8 +966,8 @@ def do_engineer(main_screen, arg_is_fire):
     return main_screen
 
 
-def do_oracle(main_screen, arg_is_fire):
-    main_screen = get_main_screen(main_screen, arg_is_fire)
+def do_oracle(main_screen, arg_is_fire, do_prestige):
+    main_screen = get_main_screen(main_screen, arg_is_fire, do_prestige)
     
     try:
         click_on_image(oracle_advice_path, confidence=0.8)
@@ -1059,8 +1078,8 @@ def do_guardians_type(level, data):
     return False
 
 
-def do_guardian(main_screen, arg_is_fire):
-    main_screen = get_main_screen(main_screen, arg_is_fire)
+def do_guardian(main_screen, arg_is_fire, do_prestige):
+    main_screen = get_main_screen(main_screen, arg_is_fire, do_prestige)
     
     try:
         click_on_image(guardian_advice_3_5_path, confidence=0.8)
@@ -1134,8 +1153,8 @@ def do_guardian(main_screen, arg_is_fire):
     return main_screen
 
 
-def do_oracle_gift(main_screen, arg_is_fire):
-    main_screen = get_main_screen(main_screen, arg_is_fire)
+def do_oracle_gift(main_screen, arg_is_fire, do_prestige):
+    main_screen = get_main_screen(main_screen, arg_is_fire, do_prestige)
     
     try:
         click_on_image(oracle_gift_advice_path, confidence=0.8)
@@ -1155,8 +1174,8 @@ def do_oracle_gift(main_screen, arg_is_fire):
     return main_screen
 
 
-def do_event(main_screen, arg_is_fire):
-    main_screen = get_main_screen(main_screen, arg_is_fire)
+def do_event(main_screen, arg_is_fire, do_prestige):
+    main_screen = get_main_screen(main_screen, arg_is_fire, do_prestige)
     
     try:
         click_on_image(events_1_path)
@@ -1214,8 +1233,8 @@ def do_event(main_screen, arg_is_fire):
     return main_screen
 
 
-def do_research(main_screen, arg_is_fire):
-    main_screen = get_main_screen(main_screen, arg_is_fire)
+def do_research(main_screen, arg_is_fire, do_prestige):
+    main_screen = get_main_screen(main_screen, arg_is_fire, do_prestige)
     
     try:
         click_on_image(research_advice_path, confidence=0.8)
@@ -1279,7 +1298,7 @@ def do_research(main_screen, arg_is_fire):
                         return main_screen
             
             if j != passes - 1:
-                scroll_left()
+                scroll_left("research")
                 time.sleep(1)
         except ImageNotFoundException:
             pass
@@ -1290,8 +1309,8 @@ def do_research(main_screen, arg_is_fire):
     return main_screen
 
 
-def hit_chaos(main_screen, arg_is_fire):
-    main_screen = get_main_screen(main_screen, arg_is_fire)
+def hit_chaos(main_screen, arg_is_fire, do_prestige):
+    main_screen = get_main_screen(main_screen, arg_is_fire, do_prestige)
     
     try:
         click_on_image(chaos_advice_path)
@@ -1326,8 +1345,8 @@ def hit_chaos(main_screen, arg_is_fire):
     return main_screen
 
 
-def do_arena(main_screen, arg_is_fire):
-    main_screen = get_main_screen(main_screen, arg_is_fire)
+def do_arena(main_screen, arg_is_fire, do_prestige):
+    main_screen = get_main_screen(main_screen, arg_is_fire, do_prestige)
     
     try:
         click_on_image(arena_advice_path)
@@ -1397,8 +1416,8 @@ def do_arena(main_screen, arg_is_fire):
     return main_screen
 
 
-def prestige(main_screen, arg_is_fire):
-    get_main_screen(main_screen, arg_is_fire)
+def prestige(main_screen, arg_is_fire, do_prestige):
+    get_main_screen(main_screen, arg_is_fire, do_prestige)
     p.press("u")
     main_screen = False
     time.sleep(1)
@@ -1445,7 +1464,7 @@ def prestige(main_screen, arg_is_fire):
         logger.debug("Unable to find prestige advice")
     else:
         time.sleep(0.5)
-        main_screen = get_main_screen(main_screen, arg_is_fire)
+        main_screen = get_main_screen(main_screen, arg_is_fire, do_prestige)
         time.sleep(0.5)
     
         try:
@@ -1495,79 +1514,92 @@ def check(
     no_tavern, 
     do_prestige
 ):
-    main_screen = do_guild_expedition(main_screen, arg_is_fire)
-    main_screen = do_machine(main_screen, arg_is_fire)
-    main_screen = do_quest(main_screen, arg_is_fire)
-    main_screen = hit_crystal(main_screen, arg_is_fire)
-    main_screen = get_pickaxes(main_screen, arg_is_fire, from_advice=True)
-    main_screen = do_map(main_screen, arg_is_fire)
-    main_screen = do_shop(main_screen, arg_is_fire)
-    main_screen = do_daily_reward(main_screen, arg_is_fire)
+    main_screen = do_guild_expedition(main_screen, arg_is_fire, do_prestige)
+    main_screen = do_machine(main_screen, arg_is_fire, do_prestige)
+    main_screen = do_quest(main_screen, arg_is_fire, do_prestige)
+    main_screen = hit_crystal(main_screen, arg_is_fire, do_prestige)
+    
+    main_screen = get_pickaxes(
+        main_screen, 
+        arg_is_fire, 
+        do_prestige, 
+        from_advice=True
+    )
+    
+    main_screen = do_map(main_screen, arg_is_fire, do_prestige)
+    main_screen = do_shop(main_screen, arg_is_fire, do_prestige)
+    main_screen = do_daily_reward(main_screen, arg_is_fire, do_prestige)
     
     if not no_tavern:
-        main_screen = do_tavern(main_screen, arg_is_fire)
+        main_screen = do_tavern(main_screen, arg_is_fire, do_prestige)
     
-    main_screen = do_alchemist(main_screen, arg_is_fire, spend_dust)
-    main_screen = do_engineer(main_screen, arg_is_fire)
-    main_screen = do_oracle(main_screen, arg_is_fire)
-    main_screen = do_guardian(main_screen, arg_is_fire)
-    main_screen = do_oracle_gift(main_screen, arg_is_fire)
-    main_screen = do_research(main_screen, arg_is_fire)
-    main_screen = hit_chaos(main_screen, arg_is_fire)
-    main_screen = do_arena(main_screen, arg_is_fire)
+    main_screen = do_alchemist(
+        main_screen, 
+        arg_is_fire, 
+        spend_dust, 
+        do_prestige
+    )
+    
+    main_screen = do_engineer(main_screen, arg_is_fire, do_prestige)
+    main_screen = do_oracle(main_screen, arg_is_fire, do_prestige)
+    main_screen = do_guardian(main_screen, arg_is_fire, do_prestige)
+    main_screen = do_oracle_gift(main_screen, arg_is_fire, do_prestige)
+    main_screen = do_research(main_screen, arg_is_fire, do_prestige)
+    main_screen = hit_chaos(main_screen, arg_is_fire, do_prestige)
+    main_screen = do_arena(main_screen, arg_is_fire, do_prestige)
     
     if events:
-        main_screen = do_event(main_screen, arg_is_fire)
+        main_screen = do_event(main_screen, arg_is_fire, do_prestige)
     
     if do_prestige:
-        main_screen = prestige(main_screen, arg_is_fire)
+        main_screen = prestige(main_screen, arg_is_fire, do_prestige)
     
-    main_screen = get_main_screen(main_screen, arg_is_fire)
+    main_screen = get_main_screen(main_screen, arg_is_fire, do_prestige)
     
     return main_screen
 
 
-parser = argparse.ArgumentParser(
-    prog='firestone.py',
-    description='Automates the Firestone idle game',
-)
-
-parser.add_argument(
-    "command",
-    choices=("fire", "pre"),
-    nargs="?",
-    help="Make the guardian attack. 'pre' is equivalent to 'fire -p'",
-)
-
-parser.add_argument(
-    "-d", 
-    "--spend-dust", 
-    action="store_true", 
-    help="Enables the auto-clicking on dust researches in Alchemist"
-)
-
-parser.add_argument(
-    "-t", 
-    "--no-tavern", 
-    action="store_true", 
-    help="Disables auto-clicking on the Tavern"
-)
-
-parser.add_argument(
-    "-e", 
-    "--events", 
-    action="store_true", 
-    help="Enables auto-clicking on the Events (for now only Decorated Heroes)"
-)
-
-parser.add_argument(
-    "-p", 
-    "--prestige", 
-    action="store_true", 
-    help="Enables auto-upgrade of heroes and auto-prestige"
-)
-
 def main():
+    parser = argparse.ArgumentParser(
+        prog='firestone.py',
+        description='Automates the Firestone idle game',
+    )
+
+    parser.add_argument(
+        "command",
+        choices=("fire", "pre"),
+        nargs="?",
+        help="Make the guardian attack. 'pre' is equivalent to 'fire -p'",
+    )
+
+    parser.add_argument(
+        "-d", 
+        "--spend-dust", 
+        action="store_true", 
+        help="Enables the auto-clicking on dust researches in Alchemist"
+    )
+
+    parser.add_argument(
+        "-t", 
+        "--no-tavern", 
+        action="store_true", 
+        help="Disables auto-clicking on the Tavern"
+    )
+
+    parser.add_argument(
+        "-e", 
+        "--events", 
+        action="store_true", 
+        help="Enables auto-clicking on the Events (for now only Decorated Heroes)"
+    )
+
+    parser.add_argument(
+        "-p", 
+        "--prestige", 
+        action="store_true", 
+        help="Enables auto-upgrade of heroes and auto-prestige"
+    )
+    
     args = parser.parse_args()
 
     main_screen = True
@@ -1591,7 +1623,7 @@ def main():
     elif args.command == "pre":
         arg_is_fire = True
         do_prestige = True
-
+    
     wait_sec = 100 if arg_is_fire else 3
     wait_sec_packaxes = 5737
 
@@ -1610,7 +1642,7 @@ def main():
             
         
         if curr_time - prev_time_pickaxes >= wait_sec_packaxes:
-            main_screen = get_pickaxes(main_screen, arg_is_fire)
+            main_screen = get_pickaxes(main_screen, arg_is_fire, do_prestige)
             prev_time_pickaxes = time.time()
 
         if curr_time - prev_time >= wait_sec:
@@ -1629,6 +1661,7 @@ def main():
                 duration_advice = 3
                 p.moveTo(advice_down_x, advice_down_y)
                 dragTo(advice_up_x, advice_up_y, duration=duration_advice)
+                press_3(do_prestige, main_screen_real)
                 time.sleep(4)
                 
                 main_screen = check(
@@ -1651,6 +1684,7 @@ def main():
                         duration=duration_advice
                     )
                     
+                    press_3(do_prestige, main_screen_real)
                     time.sleep(4)
                     prev_time = time.time()
         
