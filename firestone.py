@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import pyautogui as p
 from pyautogui import ImageNotFoundException
 from pyscreeze import ImageNotFoundException as ImageNotFoundException2
@@ -29,6 +31,7 @@ config.read(ini_path)
 config.sections()
 coordinates_conf = config["coordinates"]
 prestige_conf = config["prestige"]
+hero_conf = config["hero"]
 
 home_x = int(coordinates_conf["home_x"])
 home_y = int(coordinates_conf["home_y"])
@@ -51,6 +54,9 @@ map_move_up_x = int(coordinates_conf["map_move_up_x"])
 map_move_up_y = int(coordinates_conf["map_move_up_y"])
 
 preferred_heroes = json.loads(prestige_conf["preferred_heroes"])
+
+power_prestige = hero_conf["power_prestige"]
+power_farming = hero_conf["power_farming"]
 
 image_ext = ".png"
 
@@ -308,9 +314,12 @@ def scroll_left(scope=None):
     time.sleep(0.5)
 
 
-def press_3(do_prestige, main_screen_real):
-    if not do_prestige and main_screen_real:
-        p.press("3")
+def press_power(do_prestige, main_screen_real):
+    if main_screen_real:
+        if do_prestige:
+            p.press(power_prestige)
+        else:
+            p.press(power_farming)
 
 
 def get_main_screen(main_screen, arg_is_fire, do_prestige):
@@ -331,7 +340,7 @@ def get_main_screen(main_screen, arg_is_fire, do_prestige):
         move_random_around_home()
         p.click(interval=0.5)
     
-    press_3(do_prestige, main_screen_real)
+    press_power(do_prestige, main_screen_real)
 
     return True
 
@@ -736,6 +745,10 @@ def do_map(main_screen, arg_is_fire, do_prestige):
     
     dragTo(map_move_up_x, map_move_up_y)
     time.sleep(0.5)
+    
+    if locateOnScreen(mission_rewards_path, confidence=0.8):
+        p.press("esc")
+        time.sleep(0.5)
     
     i = 0
     
@@ -1512,7 +1525,8 @@ def check(
     spend_dust, 
     events, 
     no_tavern, 
-    do_prestige
+    do_prestige_action,
+    do_prestige,
 ):
     main_screen = do_guild_expedition(main_screen, arg_is_fire, do_prestige)
     main_screen = do_machine(main_screen, arg_is_fire, do_prestige)
@@ -1551,7 +1565,7 @@ def check(
     if events:
         main_screen = do_event(main_screen, arg_is_fire, do_prestige)
     
-    if do_prestige:
+    if do_prestige_action:
         main_screen = prestige(main_screen, arg_is_fire, do_prestige)
     
     main_screen = get_main_screen(main_screen, arg_is_fire, do_prestige)
@@ -1653,6 +1667,7 @@ def main():
                 events,
                 no_tavern,
                 do_prestige,
+                do_prestige,
             )
             
             main_screen_real = is_main_screen(main_screen)
@@ -1661,7 +1676,7 @@ def main():
                 duration_advice = 3
                 p.moveTo(advice_down_x, advice_down_y)
                 dragTo(advice_up_x, advice_up_y, duration=duration_advice)
-                press_3(do_prestige, main_screen_real)
+                press_power(do_prestige, main_screen_real)
                 time.sleep(4)
                 
                 main_screen = check(
@@ -1671,6 +1686,7 @@ def main():
                     events,
                     no_tavern,
                     False,
+                    do_prestige,
                 )
                 
                 main_screen_real = is_main_screen(main_screen)
@@ -1684,7 +1700,7 @@ def main():
                         duration=duration_advice
                     )
                     
-                    press_3(do_prestige, main_screen_real)
+                    press_power(do_prestige, main_screen_real)
                     time.sleep(4)
                     prev_time = time.time()
         
@@ -1694,6 +1710,8 @@ def main():
             move_random_around_home()
             
             p.click(interval=0.4)
+            
+            press_power(do_prestige, main_screen_real)
 
 if __name__ == "__main__":
     try:

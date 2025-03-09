@@ -2,6 +2,7 @@
 
 Features:
 * auto-prestige
+* auto-press leader power
 * claims and starts guild expeditions
 * does map missions
 * claims and starts oracle rituals
