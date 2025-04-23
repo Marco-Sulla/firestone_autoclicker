@@ -80,6 +80,7 @@ claim_dark_green_4_path = image_dir / f"claim_dark_green_4{image_ext}"
 claim_dark_green_5_path = image_dir / f"claim_dark_green_5{image_ext}"
 claim_map_path = image_dir / f"claim_map{image_ext}"
 claim_research_path = image_dir / f"claim_research{image_ext}"
+claim_rewards_path = image_dir / f"claim_rewards{image_ext}"
 
 start_path = image_dir / f"start{image_ext}"
 free_path = image_dir / f"free{image_ext}"
@@ -102,6 +103,7 @@ research_maxed_path = image_dir / f"research_maxed{image_ext}"
 research_in_progress_path = image_dir / f"research_in_progress{image_ext}"
 research_is_locked_path = image_dir / f"research_is_locked{image_ext}"
 mission_rewards_path = image_dir / f"mission_rewards{image_ext}"
+close_buy_path = image_dir / f"close_buy{image_ext}"
 
 machine_advice_path = image_dir / f"machine_advice{image_ext}"
 machine_claim_loot_path = image_dir / f"machine_claim_loot{image_ext}"
@@ -324,6 +326,13 @@ def press_power(do_prestige, main_screen_real):
 
 def get_main_screen(main_screen, arg_is_fire, do_prestige):
     if not main_screen:
+        try:
+            click_on_image(close_buy_path)
+        except ImageNotFoundException:
+            pass
+        else:
+            time.sleep(1)
+        
         for _ in range(15):
             p.press("esc")
         
@@ -559,7 +568,7 @@ def get_pickaxes(main_screen, arg_is_fire, do_prestige, from_advice=False):
             logger.error("Failed to find guild")
             return main_screen
 
-        time.sleep(1)
+        time.sleep(2)
 
         try:
             click_on_image(guild_shop_path, confidence=0.7)
@@ -567,7 +576,7 @@ def get_pickaxes(main_screen, arg_is_fire, do_prestige, from_advice=False):
             logger.error("Failed to find guild shop")
             return main_screen
 
-        time.sleep(0.5)
+        time.sleep(1)
 
         try:
             click_on_image(guild_supplies_path)
@@ -576,7 +585,7 @@ def get_pickaxes(main_screen, arg_is_fire, do_prestige, from_advice=False):
                 logger.error("Failed to find guild supplies")
                 return main_screen
 
-    time.sleep(0.5)
+    time.sleep(1)
 
     try:
         click_on_image(claim_dark_green_2_path, confidence=0.8)
@@ -615,16 +624,16 @@ def hit_crystal(main_screen, arg_is_fire, do_prestige, from_advice=True):
         else:
             main_screen = False
         
-        time.sleep(0.5)
+        time.sleep(2)
         
         try:
-            click_on_image(arcane_crystal_path)
+            click_on_image(arcane_crystal_path, confidence=0.7)
         except ImageNotFoundException:
             logger.error("Failed to find arcane crystal")
             return main_screen
         
         
-    time.sleep(0.5)
+    time.sleep(1)
     
     
     hits = 0
@@ -722,33 +731,44 @@ def click_on_map(main_screen):
     return main_screen
 
 
-def do_map(main_screen, arg_is_fire, do_prestige):
-    main_screen = get_main_screen(main_screen, arg_is_fire, do_prestige)
-    
-    main_screen_map = click_on_map(main_screen)
-    
-    if main_screen_map is None:
-        return main_screen
-    else:
-        main_screen = main_screen_map
+def do_map(main_screen, arg_is_fire, do_prestige, repeat=True):
+    if repeat:
+        main_screen = get_main_screen(main_screen, arg_is_fire, do_prestige)
+        
+        main_screen_map = click_on_map(main_screen)
+        
+        if main_screen_map is None:
+            return main_screen
+        else:
+            main_screen = main_screen_map
 
-    time.sleep(1)
+        time.sleep(1)
     
-    # center the map
-    p.moveTo(map_move_left_x, map_move_left_y)
-    dragTo(map_move_up_x, map_move_left_y)
-    time.sleep(0.5)
-    
-    if locateOnScreen(mission_rewards_path, confidence=0.8):
-        p.press("esc")
+        # center the map
+        p.moveTo(map_move_left_x, map_move_left_y)
+        dragTo(map_move_up_x, map_move_left_y)
         time.sleep(0.5)
-    
-    dragTo(map_move_up_x, map_move_up_y)
-    time.sleep(0.5)
-    
-    if locateOnScreen(mission_rewards_path, confidence=0.8):
-        p.press("esc")
+        
+        esc_pressed = False
+        
+        if locateOnScreen(mission_rewards_path, confidence=0.8):
+            p.press("esc")
+            esc_pressed = True
+            time.sleep(0.5)
+        
+        if not esc_pressed and locateOnScreen(
+            claim_rewards_path, 
+            confidence=0.8
+        ):
+            p.press("esc")
+            time.sleep(0.5)
+        
+        dragTo(map_move_up_x, map_move_up_y)
         time.sleep(0.5)
+        
+        if locateOnScreen(mission_rewards_path, confidence=0.8):
+            p.press("esc")
+            time.sleep(0.5)
     
     i = 0
     
@@ -777,10 +797,26 @@ def do_map(main_screen, arg_is_fire, do_prestige):
     done = do_map_mission(map_mission_dragon_path, "dragon") or done
     done = do_map_mission(map_mission_scout_path, "scout") or done
     done = do_map_mission(map_mission_war_path, "war", confidence=0.65) or done
-    done = do_map_mission(map_mission_adventure_path, "adventure", confidence=0.65) or done
+    
+    done = do_map_mission(
+        map_mission_adventure_path, 
+        "adventure", 
+        confidence=0.65
+    ) or done
     
     if not done:
-        logger.error("Unable to start or claim any map mission")
+        extra_msg = ""
+        
+        if repeat:
+            extra_msg = ", trying again"
+        
+        logger.error(f"Unable to start or claim any map mission{extra_msg}")
+        
+        if repeat:
+            p.moveTo(map_move_left_x, map_move_left_y)
+            dragTo(map_move_left_x, map_move_left_y - 50)
+            time.sleep(0.5)
+            do_map(main_screen, arg_is_fire, do_prestige, False)
 
     return main_screen
 
@@ -1122,7 +1158,7 @@ def do_guardian(main_screen, arg_is_fire, do_prestige):
     else:
         main_screen = False
 
-    time.sleep(1)
+    time.sleep(2)
     
     try:
         click_on_image(train_free_path, confidence=train_free_path_confidence)
@@ -1382,7 +1418,7 @@ def do_arena(main_screen, arg_is_fire, do_prestige):
         
         fight_location = fight_locations[-1]
         click_on_location(fight_location)
-        time.sleep(1)
+        time.sleep(2)
         
         try:
             click_on_image(arena_fight_start_path)
@@ -1433,10 +1469,10 @@ def prestige(main_screen, arg_is_fire, do_prestige):
     get_main_screen(main_screen, arg_is_fire, do_prestige)
     p.press("u")
     main_screen = False
-    time.sleep(1)
+    time.sleep(2)
     
     for _ in range(100):
-        if locateOnScreen(upgrade_max_path):
+        if locateOnScreen(upgrade_max_path, confidence=0.8):
             logger.debug("Max heroes upgrade multiplier found")
             break
         
@@ -1616,7 +1652,7 @@ def main():
     
     args = parser.parse_args()
 
-    main_screen = True
+    main_screen = is_main_screen()
 
     p.keyDown("alt")
     time.sleep(0.2)
@@ -1651,15 +1687,28 @@ def main():
         curr_time = time.time()
         
         if curr_time - prev_time_safe >= safe_delta_sec:
-            main_screen = is_main_screen(main_screen)
+            main_screen = get_main_screen(
+                main_screen, 
+                arg_is_fire, 
+                do_prestige
+            )
+            
             prev_time_safe = time.time()
             
         
         if curr_time - prev_time_pickaxes >= wait_sec_packaxes:
             main_screen = get_pickaxes(main_screen, arg_is_fire, do_prestige)
             prev_time_pickaxes = time.time()
-
-        if curr_time - prev_time >= wait_sec:
+            
+            main_screen = get_main_screen(
+                main_screen, 
+                arg_is_fire, 
+                do_prestige
+            )
+        
+        main_screen = is_main_screen()
+        
+        if curr_time - prev_time >= wait_sec and main_screen:
             main_screen = check(
                 main_screen, 
                 arg_is_fire, 
@@ -1704,7 +1753,7 @@ def main():
                     time.sleep(4)
                     prev_time = time.time()
         
-        main_screen_real = is_main_screen(main_screen)
+        main_screen_real = is_main_screen()
         
         if arg_is_fire and main_screen_real: 
             move_random_around_home()
