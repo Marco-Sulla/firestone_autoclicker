@@ -104,6 +104,7 @@ research_in_progress_path = image_dir / f"research_in_progress{image_ext}"
 research_is_locked_path = image_dir / f"research_is_locked{image_ext}"
 mission_rewards_path = image_dir / f"mission_rewards{image_ext}"
 close_buy_path = image_dir / f"close_buy{image_ext}"
+save_and_exit_path = image_dir / f"save_and_exit{image_ext}"
 
 machine_advice_path = image_dir / f"machine_advice{image_ext}"
 machine_claim_loot_path = image_dir / f"machine_claim_loot{image_ext}"
@@ -335,6 +336,13 @@ def get_main_screen(main_screen, arg_is_fire, do_prestige):
         
         for _ in range(15):
             p.press("esc")
+            
+            if locateOnScreen(guild_path):
+                break
+            
+            if locateOnScreen(save_and_exit_path, confidence=0.8):
+                p.press("esc")
+                break
         
         try:
             click_on_image(exit_guild_path)
