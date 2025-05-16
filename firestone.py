@@ -53,6 +53,11 @@ map_move_left_y = int(coordinates_conf["map_move_left_y"])
 map_move_up_x = int(coordinates_conf["map_move_up_x"])
 map_move_up_y = int(coordinates_conf["map_move_up_y"])
 
+bag_scroll_down_x = int(coordinates_conf["bag_scroll_down_x"])
+bag_scroll_down_y = int(coordinates_conf["bag_scroll_down_y"])
+bag_scroll_up_x = int(coordinates_conf["bag_scroll_up_x"])
+bag_scroll_up_y = int(coordinates_conf["bag_scroll_up_y"])
+
 preferred_heroes = json.loads(prestige_conf["preferred_heroes"])
 
 power_prestige = hero_conf["power_prestige"]
@@ -215,10 +220,17 @@ boss_path = image_dir / f"boss{image_ext}"
 epic_prestige_path = image_dir / f"epic_prestige{image_ext}"
 firestone_advice_path = image_dir / f"firestone_advice{image_ext}"
 
+oracle_gift_path = image_dir / f"oracle_gift{image_ext}"
+oracle_gift_button_path = image_dir / f"oracle_gift_button{image_ext}"
+
+
+def locateAllOnScreen(path, confidence=0.9):
+    return p.locateAllOnScreen(str(path), confidence=confidence)
+
 
 def locateAllOnScreenAndFilterNear(path, confidence=0.9, delta=4):
     try:
-        locations_original = p.locateAllOnScreen(str(path), confidence=confidence)
+        locations_original = locateAllOnScreen(path, confidence=confidence)
     
         points = []
         locations = []
@@ -258,7 +270,7 @@ def click_on_location(location):
 def click_on_image(image, all=False, confidence=0.9):
     if all:
         try:
-            locations = p.locateAllOnScreen(str(image), confidence=confidence)
+            locations = locateAllOnScreen(image, confidence=confidence)
         
             for location in locations:
                 click_on_location(location)
@@ -326,6 +338,8 @@ def press_power(do_prestige, main_screen_real):
 
 
 def get_main_screen(main_screen, arg_is_fire, do_prestige):
+    guild_detected = False
+    
     if not main_screen:
         try:
             click_on_image(close_buy_path)
@@ -338,6 +352,8 @@ def get_main_screen(main_screen, arg_is_fire, do_prestige):
             p.press("esc")
             
             if locateOnScreen(guild_path):
+                guild_detected = True
+                main_screen = True
                 break
             
             if locateOnScreen(save_and_exit_path, confidence=0.8):
@@ -350,8 +366,11 @@ def get_main_screen(main_screen, arg_is_fire, do_prestige):
             logger.debug("Unable to exit guild")
         else:
             logger.info("Exit from guild with success")
-
-    main_screen_real = is_main_screen(main_screen)
+    
+    if guild_detected:
+        main_screen_real = True
+    else:
+        main_screen_real = is_main_screen(main_screen)
     
     if arg_is_fire and main_screen_real:
         move_random_around_home()
@@ -359,7 +378,7 @@ def get_main_screen(main_screen, arg_is_fire, do_prestige):
     
     press_power(do_prestige, main_screen_real)
 
-    return True
+    return main_screen_real
 
 
 def do_guild_expedition(main_screen, arg_is_fire, do_prestige):
@@ -788,7 +807,7 @@ def do_map(main_screen, arg_is_fire, do_prestige, repeat=True):
         
         i += 1
         
-        time.sleep(2)
+        time.sleep(1)
         p.press("esc")
         move_random_around_home()
         time.sleep(0.5)
@@ -1563,6 +1582,47 @@ def prestige(main_screen, arg_is_fire, do_prestige):
     return main_screen
 
 
+
+def open_oracle_gifts(main_screen, arg_is_fire, do_prestige):
+    main_screen = get_main_screen(main_screen, arg_is_fire, do_prestige)
+    time.sleep(0.5)
+    p.press("b")
+    time.sleep(2)
+    p.moveTo(bag_scroll_down_x, bag_scroll_down_y)
+    dragTo(bag_scroll_up_x, bag_scroll_up_y)
+    time.sleep(0.5)
+    
+    try:
+        click_on_image(oracle_gift_path)
+    except ImageNotFoundException:
+        logger.debug("No oracle's gift in the bag")
+        return main_screen
+    else:
+        main_screen = False
+    
+    time.sleep(0.5)
+    locations = locateAllOnScreen(oracle_gift_button_path)
+    
+    try:
+        location = tuple(locations)[-1]
+    except ImageNotFoundException2:
+        log.error("Unable to find any oracle's gift button")
+        return main_screen
+    else:
+        click_on_location(location)
+        time.sleep(2)
+    
+    for _ in range(60):
+        main_screen = get_main_screen(main_screen, arg_is_fire, do_prestige)
+        
+        if main_screen:
+            break
+        
+        time.sleep(1)
+    
+    return main_screen
+
+
 def check(
     main_screen, 
     arg_is_fire, 
@@ -1572,10 +1632,19 @@ def check(
     do_prestige_action,
     do_prestige,
 ):
+    main_screen = do_research(main_screen, arg_is_fire, do_prestige)
+    main_screen = do_guardian(main_screen, arg_is_fire, do_prestige)
+    main_screen = do_engineer(main_screen, arg_is_fire, do_prestige)
+    main_screen = open_oracle_gifts(main_screen, arg_is_fire, do_prestige)
+    main_screen = do_alchemist(
+        main_screen, 
+        arg_is_fire, 
+        spend_dust, 
+        do_prestige
+    )
+    
     main_screen = do_guild_expedition(main_screen, arg_is_fire, do_prestige)
-    main_screen = do_machine(main_screen, arg_is_fire, do_prestige)
     main_screen = do_quest(main_screen, arg_is_fire, do_prestige)
-    main_screen = hit_crystal(main_screen, arg_is_fire, do_prestige)
     
     main_screen = get_pickaxes(
         main_screen, 
@@ -1584,6 +1653,8 @@ def check(
         from_advice=True
     )
     
+    main_screen = hit_crystal(main_screen, arg_is_fire, do_prestige)
+    
     main_screen = do_map(main_screen, arg_is_fire, do_prestige)
     main_screen = do_shop(main_screen, arg_is_fire, do_prestige)
     main_screen = do_daily_reward(main_screen, arg_is_fire, do_prestige)
@@ -1591,19 +1662,10 @@ def check(
     if not no_tavern:
         main_screen = do_tavern(main_screen, arg_is_fire, do_prestige)
     
-    main_screen = do_alchemist(
-        main_screen, 
-        arg_is_fire, 
-        spend_dust, 
-        do_prestige
-    )
-    
-    main_screen = do_engineer(main_screen, arg_is_fire, do_prestige)
     main_screen = do_oracle(main_screen, arg_is_fire, do_prestige)
-    main_screen = do_guardian(main_screen, arg_is_fire, do_prestige)
     main_screen = do_oracle_gift(main_screen, arg_is_fire, do_prestige)
-    main_screen = do_research(main_screen, arg_is_fire, do_prestige)
     main_screen = hit_chaos(main_screen, arg_is_fire, do_prestige)
+    main_screen = do_machine(main_screen, arg_is_fire, do_prestige)
     main_screen = do_arena(main_screen, arg_is_fire, do_prestige)
     
     if events:
