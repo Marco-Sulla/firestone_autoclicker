@@ -14,6 +14,9 @@ Features:
 * spends the beer in the tavern
 * uses the free train on the guardians
 * hits the chaos
+* open chests (apart chests that can contain sigils)
+* awake heroes
+* claim reward from last message in the mailbox
 * and something more
 
 ## Steps to make it working from source code
@@ -40,6 +43,6 @@ If you want to start also dust researches in Alchemist, `python firestone.py -d`
 
 If you want to disable automatic Tavern, `python firestone.py -t`
 
-If you want to automate claming in events (only Decorated Heroes for now), `python firestone.py -e`
-
 `python firestone.py pre` is equivalent to `python firestone.py fire -p`
+
+If you want to automate claming in events (only Decorated Heroes for now), `python firestone.py -e` (deprecated, unclaimed stars in Decorated Heroes are sent in the mailbox)

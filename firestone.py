@@ -32,6 +32,7 @@ config.sections()
 coordinates_conf = config["coordinates"]
 prestige_conf = config["prestige"]
 hero_conf = config["hero"]
+platform_conf = config["platform"]
 
 home_x = int(coordinates_conf["home_x"])
 home_y = int(coordinates_conf["home_y"])
@@ -50,8 +51,8 @@ center_right_y = int(coordinates_conf["center_right_y"])
 
 map_move_left_x = int(coordinates_conf["map_move_left_x"])
 map_move_left_y = int(coordinates_conf["map_move_left_y"])
-map_move_up_x = int(coordinates_conf["map_move_up_x"])
-map_move_up_y = int(coordinates_conf["map_move_up_y"])
+map_move_down_x = int(coordinates_conf["map_move_down_x"])
+map_move_down_y = int(coordinates_conf["map_move_down_y"])
 
 bag_scroll_down_x = int(coordinates_conf["bag_scroll_down_x"])
 bag_scroll_down_y = int(coordinates_conf["bag_scroll_down_y"])
@@ -62,6 +63,8 @@ preferred_heroes = json.loads(prestige_conf["preferred_heroes"])
 
 power_prestige = hero_conf["power_prestige"]
 power_farming = hero_conf["power_farming"]
+
+esc_exits_game = int(platform_conf["esc_exits_game"])
 
 image_ext = ".png"
 
@@ -95,6 +98,7 @@ n5_path = image_dir / f"5{image_ext}"
 n5_red_path = image_dir / f"5_red{image_ext}"
 manual_path = image_dir / f"manual{image_ext}"
 manual2_path = image_dir / f"manual2{image_ext}"
+manual_green_path = image_dir / f"manual_green{image_ext}"
 arcane_crystal_path = image_dir / f"arcane_crystal{image_ext}"
 exit_guild_path = image_dir / f"exit_guild{image_ext}"
 daily_missions_path = image_dir / f"daily_missions{image_ext}"
@@ -220,9 +224,28 @@ boss_path = image_dir / f"boss{image_ext}"
 epic_prestige_path = image_dir / f"epic_prestige{image_ext}"
 firestone_advice_path = image_dir / f"firestone_advice{image_ext}"
 
+treasure_tab_path = image_dir / f"treasure_tab{image_ext}"
+common_chest_path = image_dir / f"common_chest{image_ext}"
+common_chest_button_path = image_dir / f"common_chest_button{image_ext}"
+uncommon_chest_path = image_dir / f"uncommon_chest{image_ext}"
+uncommon_chest_button_path = image_dir / f"uncommon_chest_button{image_ext}"
+rare_chest_path = image_dir / f"rare_chest{image_ext}"
+rare_chest_button_path = image_dir / f"rare_chest_button{image_ext}"
+golden_chest_path = image_dir / f"golden_chest{image_ext}"
+golden_chest_button_path = image_dir / f"golden_chest_button{image_ext}"
+comet_chest_path = image_dir / f"comet_chest{image_ext}"
+comet_chest_button_path = image_dir / f"comet_chest_button{image_ext}"
+lunar_chest_path = image_dir / f"lunar_chest{image_ext}"
+lunar_chest_button_path = image_dir / f"lunar_chest_button{image_ext}"
+solar_chest_path = image_dir / f"solar_chest{image_ext}"
+solar_chest_button_path = image_dir / f"solar_chest_button{image_ext}"
 oracle_gift_path = image_dir / f"oracle_gift{image_ext}"
 oracle_gift_button_path = image_dir / f"oracle_gift_button{image_ext}"
 
+awake_advice_path = image_dir / f"awake_advice{image_ext}"
+awake_button_path = image_dir / f"awake_button{image_ext}"
+
+mailbox_path = image_dir / f"mailbox{image_ext}"
 
 def locateAllOnScreen(path, confidence=0.9):
     return p.locateAllOnScreen(str(path), confidence=confidence)
@@ -337,6 +360,18 @@ def press_power(do_prestige, main_screen_real):
             p.press(power_farming)
 
 
+def close_save_and_exit():
+    if esc_exits_game and locateOnScreen(
+        save_and_exit_path, 
+        confidence=0.8
+    ):
+        p.press("esc")
+        
+        return True
+    
+    return False
+
+
 def get_main_screen(main_screen, arg_is_fire, do_prestige):
     guild_detected = False
     
@@ -356,8 +391,7 @@ def get_main_screen(main_screen, arg_is_fire, do_prestige):
                 main_screen = True
                 break
             
-            if locateOnScreen(save_and_exit_path, confidence=0.8):
-                p.press("esc")
+            if close_save_and_exit():
                 break
         
         try:
@@ -758,7 +792,7 @@ def click_on_map(main_screen):
     return main_screen
 
 
-def do_map(main_screen, arg_is_fire, do_prestige, repeat=True):
+def do_map(main_screen, arg_is_fire, do_prestige, repeat=True, moved=True):
     if repeat:
         main_screen = get_main_screen(main_screen, arg_is_fire, do_prestige)
         
@@ -766,36 +800,11 @@ def do_map(main_screen, arg_is_fire, do_prestige, repeat=True):
         
         if main_screen_map is None:
             return main_screen
-        else:
-            main_screen = main_screen_map
+        
+        main_screen = main_screen_map
 
         time.sleep(1)
     
-        # center the map
-        p.moveTo(map_move_left_x, map_move_left_y)
-        dragTo(map_move_up_x, map_move_left_y)
-        time.sleep(0.5)
-        
-        esc_pressed = False
-        
-        if locateOnScreen(mission_rewards_path, confidence=0.8):
-            p.press("esc")
-            esc_pressed = True
-            time.sleep(0.5)
-        
-        if not esc_pressed and locateOnScreen(
-            claim_rewards_path, 
-            confidence=0.8
-        ):
-            p.press("esc")
-            time.sleep(0.5)
-        
-        dragTo(map_move_up_x, map_move_up_y)
-        time.sleep(0.5)
-        
-        if locateOnScreen(mission_rewards_path, confidence=0.8):
-            p.press("esc")
-            time.sleep(0.5)
     
     i = 0
     
@@ -814,6 +823,33 @@ def do_map(main_screen, arg_is_fire, do_prestige, repeat=True):
     
     if i:
         logger.info(f"{i} map loots claimed")
+    
+    # center the map
+    if not moved and repeat:
+        p.moveTo(map_move_left_x, map_move_left_y)
+        dragTo(map_move_down_x, map_move_left_y)
+        time.sleep(0.5)
+        
+        esc_pressed = False
+        
+        if locateOnScreen(mission_rewards_path, confidence=0.8):
+            p.press("esc")
+            esc_pressed = True
+            time.sleep(0.5)
+        
+        if not esc_pressed and locateOnScreen(
+            claim_rewards_path, 
+            confidence=0.8
+        ):
+            p.press("esc")
+            time.sleep(0.5)
+        
+        dragTo(map_move_down_x, map_move_down_y)
+        time.sleep(0.5)
+        
+        if locateOnScreen(mission_rewards_path, confidence=0.8):
+            p.press("esc")
+            time.sleep(0.5)
     
     time.sleep(2)
     
@@ -843,8 +879,8 @@ def do_map(main_screen, arg_is_fire, do_prestige, repeat=True):
             p.moveTo(map_move_left_x, map_move_left_y)
             dragTo(map_move_left_x, map_move_left_y - 50)
             time.sleep(0.5)
-            do_map(main_screen, arg_is_fire, do_prestige, False)
-
+            do_map(main_screen, arg_is_fire, do_prestige, repeat=False)
+    
     return main_screen
 
 
@@ -1438,7 +1474,10 @@ def do_arena(main_screen, arg_is_fire, do_prestige):
     
     for n in range(100):
         try:
-            fight_locations = locateAllOnScreenAndFilterNear(arena_fight_path)
+            fight_locations = locateAllOnScreenAndFilterNear(
+                arena_fight_path,
+                confidence=0.8,
+            )
         except ImageNotFoundException:
             logger.error("Unable to find any fight button")
             break
@@ -1582,44 +1621,213 @@ def prestige(main_screen, arg_is_fire, do_prestige):
     return main_screen
 
 
+wait_time_bag_opened = 0.5
 
-def open_oracle_gifts(main_screen, arg_is_fire, do_prestige):
+
+def open_chest(
+    chest_path, 
+    chest_button_path, 
+    chest_name, 
+    main_screen, 
+    arg_is_fire, 
+    do_prestige,
+    not_last=True,
+):
+    try:
+        click_on_image(chest_path)
+    except ImageNotFoundException:
+        logger.debug(f"No {chest_name} in the bag")
+    else:
+        time.sleep(0.5)
+        locations = locateAllOnScreen(chest_button_path)
+        
+        try:
+            location = tuple(locations)[-1]
+        except ImageNotFoundException2:
+            log.error(f"Unable to find any {chest_name} button")
+        else:
+            click_on_location(location)
+            time.sleep(2)
+        
+            for _ in range(60):
+                main_screen = get_main_screen(
+                    main_screen, 
+                    arg_is_fire, 
+                    do_prestige
+                )
+                
+                if main_screen:
+                    break
+                
+                time.sleep(1)
+            
+            if not_last:
+                time.sleep(1)
+                p.press("b")
+                main_screen = False
+                time.sleep(wait_time_bag_opened)
+                
+    return main_screen
+
+
+def open_chests(main_screen, arg_is_fire, do_prestige):
     main_screen = get_main_screen(main_screen, arg_is_fire, do_prestige)
     time.sleep(0.5)
     p.press("b")
-    time.sleep(2)
+    main_screen = False
+    time.sleep(wait_time_bag_opened)
+    
+    try:
+        click_on_image(treasure_tab_path, confidence=0.8)
+    except ImageNotFoundException:
+        logger.error("Unable to find treasure tab in the bag")
+        return main_screen
+    
+    time.sleep(0.5)
+    p.moveTo(bag_scroll_up_x, bag_scroll_up_y)
+    dragTo(bag_scroll_down_x, bag_scroll_down_y)
+    time.sleep(1)
+    
+    main_screen = open_chest(
+        common_chest_path, 
+        common_chest_button_path, 
+        "common chest", 
+        main_screen, 
+        arg_is_fire, 
+        do_prestige
+    )
+    
+    main_screen = open_chest(
+        uncommon_chest_path, 
+        uncommon_chest_button_path, 
+        "uncommon chest", 
+        main_screen, 
+        arg_is_fire, 
+        do_prestige
+    )
+    
+    main_screen = open_chest(
+        rare_chest_path, 
+        rare_chest_button_path, 
+        "rare chest", 
+        main_screen, 
+        arg_is_fire, 
+        do_prestige
+    )
+    
+    main_screen = open_chest(
+        golden_chest_path, 
+        golden_chest_button_path, 
+        "golden chest", 
+        main_screen, 
+        arg_is_fire, 
+        do_prestige
+    )
+    
+    main_screen = open_chest(
+        comet_chest_path, 
+        comet_chest_button_path, 
+        "comet chest", 
+        main_screen, 
+        arg_is_fire, 
+        do_prestige
+    )
+    
+    main_screen = open_chest(
+        lunar_chest_path, 
+        lunar_chest_button_path, 
+        "lunar chest", 
+        main_screen, 
+        arg_is_fire, 
+        do_prestige
+    )
+    
+    main_screen = open_chest(
+        solar_chest_path, 
+        solar_chest_button_path, 
+        "solar chest", 
+        main_screen, 
+        arg_is_fire, 
+        do_prestige
+    )
+    
     p.moveTo(bag_scroll_down_x, bag_scroll_down_y)
     dragTo(bag_scroll_up_x, bag_scroll_up_y)
     time.sleep(0.5)
     
+    main_screen = open_chest(
+        oracle_gift_path, 
+        oracle_gift_button_path, 
+        "oracle's gift", 
+        main_screen, 
+        arg_is_fire, 
+        do_prestige,
+        False
+    )
+    
+    return main_screen
+
+
+def awake(main_screen, arg_is_fire, do_prestige):
+    main_screen = get_main_screen(main_screen, arg_is_fire, do_prestige)
+    
     try:
-        click_on_image(oracle_gift_path)
+        click_on_image(awake_advice_path)
     except ImageNotFoundException:
-        logger.debug("No oracle's gift in the bag")
+        logger.debug("No awake advice")
         return main_screen
-    else:
-        main_screen = False
-    
+        
+    main_screen = False
     time.sleep(0.5)
-    locations = locateAllOnScreen(oracle_gift_button_path)
-    
-    try:
-        location = tuple(locations)[-1]
-    except ImageNotFoundException2:
-        log.error("Unable to find any oracle's gift button")
-        return main_screen
-    else:
-        click_on_location(location)
-        time.sleep(2)
+    did_something = False
     
     for _ in range(60):
-        main_screen = get_main_screen(main_screen, arg_is_fire, do_prestige)
-        
-        if main_screen:
+        try:
+            click_on_image(awake_button_path)
+        except ImageNotFoundException:
+            logger.debug("No hero to awake")
             break
-        
-        time.sleep(1)
+        else:
+            if not locateOnScreen(manual_green_path):
+                break
+            
+            logger.info("Hero awaken")
+            did_something = True
+            time.sleep(4.5)
+
+    if not did_something:
+        logger.error("Failed to awake any hero")
+
+    return main_screen
+
+
+def open_mailbox(main_screen, arg_is_fire, do_prestige):
+    main_screen = get_main_screen(main_screen, arg_is_fire, do_prestige)
     
+    try:
+        click_on_image(mailbox_path)
+    except ImageNotFoundException:
+        logger.error("Unable to find mailbox")
+        return main_screen
+    
+    main_screen = False
+    time.sleep(0.5)
+    claimed = False
+
+    try:
+        click_on_image(claim_green_path)
+    except ImageNotFoundException:
+        logger.debug("No message to claim")
+    else:
+        logger.info("Message claimed")
+        p.press("esc")
+        claimed = True
+    
+    p.press("esc")
+    
+    if claimed:
+        close_save_and_exit()
+
     return main_screen
 
 
@@ -1631,11 +1839,13 @@ def check(
     no_tavern, 
     do_prestige_action,
     do_prestige,
+    first_time,
 ):
+    main_screen = awake(main_screen, arg_is_fire, do_prestige)
+    main_screen = open_mailbox(main_screen, arg_is_fire, do_prestige)
     main_screen = do_research(main_screen, arg_is_fire, do_prestige)
     main_screen = do_guardian(main_screen, arg_is_fire, do_prestige)
     main_screen = do_engineer(main_screen, arg_is_fire, do_prestige)
-    main_screen = open_oracle_gifts(main_screen, arg_is_fire, do_prestige)
     main_screen = do_alchemist(
         main_screen, 
         arg_is_fire, 
@@ -1655,7 +1865,6 @@ def check(
     
     main_screen = hit_crystal(main_screen, arg_is_fire, do_prestige)
     
-    main_screen = do_map(main_screen, arg_is_fire, do_prestige)
     main_screen = do_shop(main_screen, arg_is_fire, do_prestige)
     main_screen = do_daily_reward(main_screen, arg_is_fire, do_prestige)
     
@@ -1665,6 +1874,10 @@ def check(
     main_screen = do_oracle(main_screen, arg_is_fire, do_prestige)
     main_screen = do_oracle_gift(main_screen, arg_is_fire, do_prestige)
     main_screen = hit_chaos(main_screen, arg_is_fire, do_prestige)
+    
+    if first_time:
+        main_screen = open_chests(main_screen, arg_is_fire, do_prestige)
+    
     main_screen = do_machine(main_screen, arg_is_fire, do_prestige)
     main_screen = do_arena(main_screen, arg_is_fire, do_prestige)
     
@@ -1677,6 +1890,7 @@ def check(
     main_screen = get_main_screen(main_screen, arg_is_fire, do_prestige)
     
     return main_screen
+
 
 
 def main():
@@ -1745,18 +1959,19 @@ def main():
         do_prestige = True
     
     wait_sec = 100 if arg_is_fire else 3
-    wait_sec_packaxes = 5737
+    wait_sec_pickaxes = 5737
+    wait_sec_map = 93
 
     now = time.time()
     prev_time = now - wait_sec - 2
-    prev_time_pickaxes = now - wait_sec_packaxes - 2
+    prev_time_pickaxes = now - wait_sec_pickaxes - 2
+    prev_time_map = now - wait_sec_map - 2
     prev_time_safe = now
     safe_delta_sec = 300
+
     
     while True:
-        curr_time = time.time()
-        
-        if curr_time - prev_time_safe >= safe_delta_sec:
+        if time.time() - prev_time_safe >= safe_delta_sec:
             main_screen = get_main_screen(
                 main_screen, 
                 arg_is_fire, 
@@ -1766,7 +1981,7 @@ def main():
             prev_time_safe = time.time()
             
         
-        if curr_time - prev_time_pickaxes >= wait_sec_packaxes:
+        if time.time() - prev_time_pickaxes >= wait_sec_pickaxes:
             main_screen = get_pickaxes(main_screen, arg_is_fire, do_prestige)
             prev_time_pickaxes = time.time()
             
@@ -1776,9 +1991,33 @@ def main():
                 do_prestige
             )
         
+        map_moved = True
+        
+        if time.time() - prev_time_map >= wait_sec_map:
+            map_moved = False
+        
+        
+        main_screen = do_map(
+            main_screen, 
+            arg_is_fire, 
+            do_prestige,
+            moved=map_moved,
+        )
+        
+        main_screen = get_main_screen(
+            main_screen, 
+            arg_is_fire, 
+            do_prestige,
+        )
+        
+        if not map_moved:
+            prev_time_map = time.time()
+        
+        prev_time_map = time.time()
+        
         main_screen = is_main_screen()
         
-        if curr_time - prev_time >= wait_sec and main_screen:
+        if time.time() - prev_time >= wait_sec and main_screen:
             main_screen = check(
                 main_screen, 
                 arg_is_fire, 
@@ -1787,6 +2026,7 @@ def main():
                 no_tavern,
                 do_prestige,
                 do_prestige,
+                True,
             )
             
             main_screen_real = is_main_screen(main_screen)
@@ -1797,6 +2037,27 @@ def main():
                 dragTo(advice_up_x, advice_up_y, duration=duration_advice)
                 press_power(do_prestige, main_screen_real)
                 time.sleep(4)
+        
+                map_moved = True
+                
+                if time.time() - prev_time_map >= wait_sec_map:
+                    map_moved = False
+                
+                main_screen = do_map(
+                    main_screen, 
+                    arg_is_fire, 
+                    do_prestige,
+                    moved=map_moved,
+                )
+                
+                main_screen = get_main_screen(
+                    main_screen, 
+                    arg_is_fire, 
+                    do_prestige,
+                )
+                
+                if not map_moved:
+                    prev_time_map = time.time()
                 
                 main_screen = check(
                     main_screen, 
@@ -1806,6 +2067,7 @@ def main():
                     no_tavern,
                     False,
                     do_prestige,
+                    False,
                 )
                 
                 main_screen_real = is_main_screen(main_screen)
