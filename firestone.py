@@ -210,6 +210,8 @@ uncommon_chest_path = image_dir / f"uncommon_chest{image_ext}"
 uncommon_chest_button_path = image_dir / f"uncommon_chest_button{image_ext}"
 rare_chest_path = image_dir / f"rare_chest{image_ext}"
 rare_chest_button_path = image_dir / f"rare_chest_button{image_ext}"
+iron_chest_path = image_dir / f"iron_chest{image_ext}"
+iron_chest_button_path = image_dir / f"iron_chest_button{image_ext}"
 golden_chest_path = image_dir / f"golden_chest{image_ext}"
 golden_chest_button_path = image_dir / f"golden_chest_button{image_ext}"
 comet_chest_path = image_dir / f"comet_chest{image_ext}"
@@ -1678,6 +1680,15 @@ def open_chests(main_screen, arg_is_fire, do_prestige):
     )
     
     main_screen = open_chest(
+        iron_chest_path, 
+        iron_chest_button_path, 
+        "iron chest", 
+        main_screen, 
+        arg_is_fire, 
+        do_prestige
+    )
+    
+    main_screen = open_chest(
         golden_chest_path, 
         golden_chest_button_path, 
         "golden chest", 
@@ -1974,8 +1985,6 @@ def main():
         
         if not map_moved:
             prev_time_map = time.time()
-        
-        prev_time_map = time.time()
         
         main_screen = is_main_screen()
         
