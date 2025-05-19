@@ -129,14 +129,6 @@ crystal_hit_path = image_dir / f"crystal_hit{image_ext}"
 crystal_hit_2_path = image_dir / f"crystal_hit_2{image_ext}"
 
 map_advice_path = image_dir / f"map_advice{image_ext}"
-map_advice_1_path = image_dir / f"map_advice_1{image_ext}"
-map_advice_2_path = image_dir / f"map_advice_2{image_ext}"
-map_advice_3_path = image_dir / f"map_advice_3{image_ext}"
-map_advice_4_path = image_dir / f"map_advice_4{image_ext}"
-map_advice_5_path = image_dir / f"map_advice_5{image_ext}"
-map_advice_6_path = image_dir / f"map_advice_6{image_ext}"
-map_advice_7_path = image_dir / f"map_advice_7{image_ext}"
-map_advice_8_path = image_dir / f"map_advice_8{image_ext}"
 map_mission_war_path = image_dir / f"map_mission_war{image_ext}"
 map_mission_adventure_path = image_dir / f"map_mission_adventure{image_ext}"
 map_mission_scout_path = image_dir / f"map_mission_scout{image_ext}"
@@ -146,18 +138,6 @@ map_mission_naval_path = image_dir / f"map_mission_naval{image_ext}"
 map_mission_cave_path = image_dir / f"map_mission_cave{image_ext}"
 
 shop_advice_path = image_dir / f"shop_advice{image_ext}"
-shop_advice_1_path = image_dir / f"shop_advice_1{image_ext}"
-shop_advice_2_path = image_dir / f"shop_advice_2{image_ext}"
-shop_advice_3_path = image_dir / f"shop_advice_3{image_ext}"
-shop_advice_4_path = image_dir / f"shop_advice_4{image_ext}"
-shop_advice_5_path = image_dir / f"shop_advice_5{image_ext}"
-shop_advice_6_path = image_dir / f"shop_advice_6{image_ext}"
-shop_advice_7_path = image_dir / f"shop_advice_7{image_ext}"
-shop_advice_8_path = image_dir / f"shop_advice_8{image_ext}"
-shop_advice_9_path = image_dir / f"shop_advice_9{image_ext}"
-shop_advice_10_path = image_dir / f"shop_advice_10{image_ext}"
-shop_advice_11_path = image_dir / f"shop_advice_11{image_ext}"
-shop_advice_12_path = image_dir / f"shop_advice_12{image_ext}"
 daily_reward_advice_path = image_dir / f"daily_reward_advice{image_ext}"
 
 tavern_advice_path = image_dir / f"tavern_advice{image_ext}"
@@ -220,7 +200,6 @@ confirm_path = image_dir / f"confirm{image_ext}"
 start_now_path = image_dir / f"start_now{image_ext}"
 upgrade_hero_path = image_dir / f"upgrade_hero{image_ext}"
 upgrade_max_path = image_dir / f"upgrade_max{image_ext}"
-boss_path = image_dir / f"boss{image_ext}"
 epic_prestige_path = image_dir / f"epic_prestige{image_ext}"
 firestone_advice_path = image_dir / f"firestone_advice{image_ext}"
 
@@ -404,6 +383,7 @@ def get_main_screen(main_screen, arg_is_fire, do_prestige):
     if guild_detected:
         main_screen_real = True
     else:
+        # TODO  is this really needed?
         main_screen_real = is_main_screen(main_screen)
     
     if arg_is_fire and main_screen_real:
@@ -423,11 +403,9 @@ def do_guild_expedition(main_screen, arg_is_fire, do_prestige):
     except ImageNotFoundException:
         logger.debug("No guild expedition advice")
         return main_screen
-    else:
-        main_screen = False
-
-    time.sleep(0.4)
     
+    main_screen = False
+    time.sleep(0.4)
     did_something = False
 
     try:
@@ -464,11 +442,9 @@ def do_machine(main_screen, arg_is_fire, do_prestige):
     except ImageNotFoundException:
         logger.debug("No machine advice")
         return main_screen
-    else:
-        main_screen = False
-
-    time.sleep(0.5)
     
+    main_screen = False
+    time.sleep(0.5)
     did_something = False
     
     try:
@@ -529,8 +505,8 @@ def do_machine(main_screen, arg_is_fire, do_prestige):
                 
                 if time.time() - start_time >= max_time:
                     logger.error(
-                        "Failed to find ok button, or liberate missions lasts" + 
-                        f" more than {max_time} seconds"
+                        "Failed to find ok button, or liberate missions " + 
+                        f"lasts more than {max_time} seconds"
                     )
                     
                     break
@@ -556,11 +532,9 @@ def do_quest(main_screen, arg_is_fire, do_prestige):
     except ImageNotFoundException:
         logger.debug("No quest advice")
         return main_screen
-    else:
-        main_screen = False
-
-    time.sleep(0.5)
     
+    main_screen = False
+    time.sleep(0.5)
     did_something = False
     
     try:
@@ -594,7 +568,6 @@ def do_quest(main_screen, arg_is_fire, do_prestige):
             logger.info("Weekly quest claimed")
             did_something = True
 
-
     if not did_something:
         logger.error("Failed to claim a daily or weekly quest")
 
@@ -610,9 +583,10 @@ def get_pickaxes(main_screen, arg_is_fire, do_prestige, from_advice=False):
         except ImageNotFoundException:
             logger.debug("No pickaxe advice")
             return main_screen
-        else:
-            main_screen = False
+        
+        main_screen = False
     else:
+        # TODO this for is really needed?
         for _ in range(10):
             guild_found = False
             
@@ -674,17 +648,16 @@ def hit_crystal(main_screen, arg_is_fire, do_prestige, from_advice=True):
         except ImageNotFoundException:
             logger.debug("No crystal advice")
             return main_screen
-        else:
-            main_screen = False
+        
+        main_screen = False
     else:
         try:
             click_on_image(guild_path)
         except ImageNotFoundException:
             logger.error("Failed to find guild")
             return main_screen
-        else:
-            main_screen = False
         
+        main_screen = False
         time.sleep(2)
         
         try:
@@ -703,6 +676,7 @@ def hit_crystal(main_screen, arg_is_fire, do_prestige, from_advice=True):
         if not locateOnScreen(manual_path, confidence=0.6):
             break
         
+        # TODO what works now?
         if not locateOnScreen(manual2_path, confidence=0.6):
             break
         
@@ -712,6 +686,7 @@ def hit_crystal(main_screen, arg_is_fire, do_prestige, from_advice=True):
             click_on_image(crystal_hit_path)
         except ImageNotFoundException:
             try:
+                # TODO what works now?
                 click_on_image(crystal_hit_2_path)
             except ImageNotFoundException:
                 break
@@ -763,6 +738,7 @@ def do_map_mission(mission_path, mission_type, confidence=0.7):
                         logger.warning(
                             "Guild button detected, but no map advice"
                         )
+                        
                         return bool(missions_started)
         else:
             time.sleep(2)
@@ -786,16 +762,13 @@ def click_on_map(main_screen):
     except ImageNotFoundException:
         logger.debug("No map advice")
         return None
-    else:
-        main_screen = False
     
-    return main_screen
+    return False
 
 
 def do_map(main_screen, arg_is_fire, do_prestige, repeat=True, moved=True):
     if repeat:
         main_screen = get_main_screen(main_screen, arg_is_fire, do_prestige)
-        
         main_screen_map = click_on_map(main_screen)
         
         if main_screen_map is None:
@@ -804,7 +777,6 @@ def do_map(main_screen, arg_is_fire, do_prestige, repeat=True, moved=True):
         main_screen = main_screen_map
 
         time.sleep(1)
-    
     
     i = 0
     
@@ -830,17 +802,7 @@ def do_map(main_screen, arg_is_fire, do_prestige, repeat=True, moved=True):
         dragTo(map_move_down_x, map_move_left_y)
         time.sleep(0.5)
         
-        esc_pressed = False
-        
         if locateOnScreen(mission_rewards_path, confidence=0.8):
-            p.press("esc")
-            esc_pressed = True
-            time.sleep(0.5)
-        
-        if not esc_pressed and locateOnScreen(
-            claim_rewards_path, 
-            confidence=0.8
-        ):
             p.press("esc")
             time.sleep(0.5)
         
@@ -1841,7 +1803,6 @@ def check(
     do_prestige,
     first_time,
 ):
-    main_screen = awake(main_screen, arg_is_fire, do_prestige)
     main_screen = open_mailbox(main_screen, arg_is_fire, do_prestige)
     main_screen = do_research(main_screen, arg_is_fire, do_prestige)
     main_screen = do_guardian(main_screen, arg_is_fire, do_prestige)
@@ -1880,6 +1841,7 @@ def check(
     
     main_screen = do_machine(main_screen, arg_is_fire, do_prestige)
     main_screen = do_arena(main_screen, arg_is_fire, do_prestige)
+    main_screen = awake(main_screen, arg_is_fire, do_prestige)
     
     if events:
         main_screen = do_event(main_screen, arg_is_fire, do_prestige)
@@ -1963,9 +1925,9 @@ def main():
     wait_sec_map = 93
 
     now = time.time()
-    prev_time = now - wait_sec - 2
-    prev_time_pickaxes = now - wait_sec_pickaxes - 2
-    prev_time_map = now - wait_sec_map - 2
+    prev_time = 0
+    prev_time_pickaxes = 0
+    prev_time_map = 0
     prev_time_safe = now
     safe_delta_sec = 300
 
