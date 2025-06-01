@@ -837,7 +837,7 @@ def do_map(main_screen, arg_is_fire, do_prestige, repeat=True):
             dragTo(map_x, map_y - 50)
             time.sleep(0.5)
             
-            main_screen, done = do_map(
+            main_screen = do_map(
                 main_screen, 
                 arg_is_fire, 
                 do_prestige, 
