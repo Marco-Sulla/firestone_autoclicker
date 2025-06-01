@@ -32,7 +32,6 @@ config.sections()
 coordinates_conf = config["coordinates"]
 prestige_conf = config["prestige"]
 hero_conf = config["hero"]
-platform_conf = config["platform"]
 
 home_x = int(coordinates_conf["home_x"])
 home_y = int(coordinates_conf["home_y"])
@@ -57,8 +56,6 @@ preferred_heroes = json.loads(prestige_conf["preferred_heroes"])
 
 power_prestige = hero_conf["power_prestige"]
 power_farming = hero_conf["power_farming"]
-
-esc_exits_game = int(platform_conf["esc_exits_game"])
 
 image_ext = ".png"
 
@@ -352,7 +349,7 @@ def press_power(do_prestige, main_screen_real):
 
 
 def close_save_and_exit():
-    if esc_exits_game and locateOnScreen(
+    if locateOnScreen(
         save_and_exit_path, 
         confidence=0.8
     ):
@@ -381,9 +378,8 @@ def get_main_screen(main_screen, arg_is_fire, do_prestige):
                 guild_detected = True
                 main_screen = True
                 break
-            
-            if close_save_and_exit():
-                break
+                
+        close_save_and_exit()
         
         try:
             click_on_image(exit_guild_path)
