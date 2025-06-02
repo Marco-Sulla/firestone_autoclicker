@@ -43,13 +43,17 @@ advice_down_x = int(coordinates_conf["advice_down_x"])
 advice_down_y = int(coordinates_conf["advice_down_y"])
 
 center_left_x = int(coordinates_conf["center_left_x"])
+center_left_x_battle_pass = int(coordinates_conf["center_left_x_battle_pass"])
 center_left_y = int(coordinates_conf["center_left_y"])
 center_right_x = int(coordinates_conf["center_right_x"])
 center_right_x_research = int(coordinates_conf["center_right_x_research"])
+center_right_x_battle_pass = int(coordinates_conf["center_right_x_battle_pass"])
+center_right_delta_x_init_battle_pass = int(coordinates_conf["center_right_delta_x_init_battle_pass"])
 center_right_y = int(coordinates_conf["center_right_y"])
 
 map_x = int(coordinates_conf["map_x"])
 map_y = int(coordinates_conf["map_y"])
+map_delta_y = int(coordinates_conf["map_delta_y"])
 
 
 preferred_heroes = json.loads(prestige_conf["preferred_heroes"])
@@ -103,6 +107,7 @@ research_is_locked_path = image_dir / f"research_is_locked{image_ext}"
 mission_rewards_path = image_dir / f"mission_rewards{image_ext}"
 close_buy_path = image_dir / f"close_buy{image_ext}"
 save_and_exit_path = image_dir / f"save_and_exit{image_ext}"
+rewards_path = image_dir / f"rewards{image_ext}"
 
 machine_advice_path = image_dir / f"machine_advice{image_ext}"
 machine_claim_loot_path = image_dir / f"machine_claim_loot{image_ext}"
@@ -235,6 +240,8 @@ emblem_of_courage_path = image_dir / f"emblem_of_courage{image_ext}"
 emblem_of_valor_path = image_dir / f"emblem_of_valor{image_ext}"
 emblem_of_brotherhood_path = image_dir / f"emblem_of_brotherhood{image_ext}"
 
+battle_pass_path = image_dir / f"battle_pass{image_ext}"
+
 def locateAllOnScreen(path, confidence=0.9):
     return p.locateAllOnScreen(str(path), confidence=confidence)
 
@@ -323,20 +330,35 @@ def move_random_around_home():
     )
 
 
-def scroll_right():
-    p.moveTo(center_left_x, center_left_y)
+def scroll_right(scope=None):
+    if scope == "battle_pass":
+        left_x = center_left_x_battle_pass
+    else:
+        left_x = center_left_x
+    
+    p.moveTo(left_x, center_left_y)
     dragTo(center_right_x, center_right_y)
     time.sleep(0.5)
 
 
-def scroll_left(scope=None):
+def scroll_left(scope=None, first_time=False):
     if scope == "research":
         right_x = center_right_x_research
+    elif scope == "battle_pass":
+        right_x = center_right_x_battle_pass
+        
+        if first_time:
+            right_x += center_right_delta_x_init_battle_pass
     else:
         right_x = center_right_x
     
+    if scope == "battle_pass":
+        left_x = center_left_x_battle_pass
+    else:
+        left_x = center_left_x
+    
     p.moveTo(right_x, center_right_y)
-    dragTo(center_left_x, center_left_y)
+    dragTo(left_x, center_left_y)
     time.sleep(0.5)
 
 
@@ -452,7 +474,7 @@ def do_machine(main_screen, arg_is_fire, do_prestige):
         return main_screen
     
     main_screen = False
-    time.sleep(0.5)
+    time.sleep(1)
     did_something = False
     
     try:
@@ -542,7 +564,7 @@ def do_quest(main_screen, arg_is_fire, do_prestige):
         return main_screen
     
     main_screen = False
-    time.sleep(0.5)
+    time.sleep(1)
     did_something = False
     
     try:
@@ -830,7 +852,7 @@ def do_map(main_screen, arg_is_fire, do_prestige, repeat=True):
         
         if repeat:
             p.moveTo(map_x, map_y)
-            dragTo(map_x, map_y - 50)
+            dragTo(map_x, map_y - map_delta_y)
             time.sleep(0.5)
             
             main_screen = do_map(
@@ -841,7 +863,7 @@ def do_map(main_screen, arg_is_fire, do_prestige, repeat=True):
             )
         else:
             p.moveTo(map_x, map_y)
-            dragTo(map_x, map_y + 50)
+            dragTo(map_x, map_y + map_delta_y)
             time.sleep(0.5)
     
     return main_screen
@@ -860,7 +882,7 @@ def do_shop(main_screen, arg_is_fire, do_prestige):
     
     main_screen = False
     
-    time.sleep(0.5)
+    time.sleep(1)
 
     try:
         click_on_image(free_path, confidence=0.6)
@@ -881,7 +903,7 @@ def do_daily_reward(main_screen, arg_is_fire, do_prestige):
     
     main_screen = False
     
-    time.sleep(0.5)
+    time.sleep(1)
     
     try:
         click_on_image(check_in_path, confidence=0.7)
@@ -1031,7 +1053,7 @@ def do_engineer(main_screen, arg_is_fire, do_prestige):
     else:
         main_screen = False
 
-    time.sleep(0.5)
+    time.sleep(1)
     
     try:
         click_on_image(claim_green_big_path)
@@ -1241,7 +1263,7 @@ def do_oracle_gift(main_screen, arg_is_fire, do_prestige):
     else:
         main_screen = False
 
-    time.sleep(0.5)
+    time.sleep(1)
     
     try:
         click_on_image(free_path, confidence=0.75)
@@ -1902,6 +1924,63 @@ def spend_emblems(main_screen, arg_is_fire, do_prestige):
     return main_screen
 
 
+def do_battle_pass(main_screen, arg_is_fire, do_prestige):
+    main_screen = get_main_screen(main_screen, arg_is_fire, do_prestige)
+    
+    try:
+        click_on_image(battle_pass_path, confidence=0.95)
+    except ImageNotFoundException:
+        logger.debug("No battle pass advice")
+        return main_screen
+    
+    main_screen = False
+    time.sleep(1)
+    did_something = False
+    
+    try:
+        click_on_image(rewards_path)
+    except ImageNotFoundException:
+        logger.error("Unable to find rewards tab in battle pass")
+        return main_screen
+        
+    time.sleep(1)
+    
+    screens_n = 6
+    
+    for _ in range(screens_n):
+        scroll_right("battle_pass")
+    
+    time.sleep(1)
+    done = False
+    
+    for i in range(screens_n):
+        found_claim = False
+        
+        try:
+            locations = locateAllOnScreenAndFilterNear(
+                claim_dark_green_3_path, 
+            )
+        except ImageNotFoundException as e:
+            pass
+        else:
+            for location in locations:
+                click_on_location(location)
+                time.sleep(0.5)
+            
+            done = True
+            
+        first_time = not bool(i)
+        scroll_left("battle_pass", first_time)
+        
+        if i != screens_n -1:
+            time.sleep(1)
+    
+    if not done:
+        logger.error("No claim button found in battle pass")
+    
+    return main_screen
+
+
 def check(
     main_screen, 
     arg_is_fire, 
@@ -1952,6 +2031,8 @@ def check(
         main_screen = open_chests(main_screen, arg_is_fire, do_prestige)
         main_screen = spend_emblems(main_screen, arg_is_fire, do_prestige)
     
+
+    main_screen = do_battle_pass(main_screen, arg_is_fire, do_prestige)    
     main_screen = do_machine(main_screen, arg_is_fire, do_prestige)
     main_screen = do_arena(main_screen, arg_is_fire, do_prestige)
     main_screen = awake(main_screen, arg_is_fire, do_prestige)
@@ -2044,7 +2125,6 @@ def main():
 
     
     while True:
-        main_screen = do_tavern(main_screen, arg_is_fire, do_prestige)
         if time.time() - prev_time_safe >= safe_delta_sec:
             main_screen = get_main_screen(
                 main_screen, 
