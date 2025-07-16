@@ -2,6 +2,7 @@
 
 import pyautogui as p
 from pyautogui import ImageNotFoundException
+from pyautogui import FailSafeException
 from pyscreeze import ImageNotFoundException as ImageNotFoundException2
 from pathlib import Path
 import time
@@ -55,7 +56,6 @@ map_x = int(coordinates_conf["map_x"])
 map_y = int(coordinates_conf["map_y"])
 map_delta_y = int(coordinates_conf["map_delta_y"])
 
-
 preferred_heroes = json.loads(prestige_conf["preferred_heroes"])
 
 power_prestige = hero_conf["power_prestige"]
@@ -63,13 +63,12 @@ power_farming = hero_conf["power_farming"]
 
 image_ext = ".png"
 
-guild_path = image_dir / f"guild{image_ext}"
-
 guild_expedition_advice_path = (
     image_dir / 
     f"guild_expedition_advice{image_ext}"
 )
 
+guild_path = image_dir / f"guild{image_ext}"
 guild_start_expedition_path = image_dir / f"guild_start_expedition{image_ext}"
 guild_shop_path = image_dir / f"guild_shop{image_ext}"
 guild_supplies_path = image_dir / f"guild_supplies{image_ext}"
@@ -91,6 +90,7 @@ free_orange_path = image_dir / f"free_orange{image_ext}"
 check_in_path = image_dir / f"check_in{image_ext}"
 manual_path = image_dir / f"manual{image_ext}"
 manual2_path = image_dir / f"manual2{image_ext}"
+manual_chaos_path = image_dir / f"manual_chaos{image_ext}"
 manual_green_path = image_dir / f"manual_green{image_ext}"
 arcane_crystal_path = image_dir / f"arcane_crystal{image_ext}"
 exit_guild_path = image_dir / f"exit_guild{image_ext}"
@@ -130,6 +130,7 @@ map_mission_monster_path = image_dir / f"map_mission_monster{image_ext}"
 map_mission_dragon_path = image_dir / f"map_mission_dragon{image_ext}"
 map_mission_naval_path = image_dir / f"map_mission_naval{image_ext}"
 map_mission_cave_path = image_dir / f"map_mission_cave{image_ext}"
+map_squad_available_path = image_dir / f"map_squad_available{image_ext}"
 
 shop_advice_path = image_dir / f"shop_advice{image_ext}"
 daily_reward_advice_path = image_dir / f"daily_reward_advice{image_ext}"
@@ -147,9 +148,7 @@ alchemist_dust_path = image_dir / f"alchemist_dust{image_ext}"
 engineer_advice_path = image_dir / f"engineer_advice{image_ext}"
 
 oracle_advice_path = image_dir / f"oracle_advice{image_ext}"
-rituals_path = image_dir / f"rituals{image_ext}"
 oracle_gift_advice_path = image_dir / f"oracle_gift_advice{image_ext}"
-
 
 guardian_advice_1_5_path = image_dir / f"guardian_advice_1_5{image_ext}"
 guardian_advice_3_2_path = image_dir / f"guardian_advice_3_2{image_ext}"
@@ -198,6 +197,7 @@ upgrade_hero_path = image_dir / f"upgrade_hero{image_ext}"
 upgrade_max_path = image_dir / f"upgrade_max{image_ext}"
 epic_prestige_path = image_dir / f"epic_prestige{image_ext}"
 firestone_advice_path = image_dir / f"firestone_advice{image_ext}"
+boss_path = image_dir / f"boss{image_ext}"
 
 treasure_tab_path = image_dir / f"treasure_tab{image_ext}"
 common_chest_path = image_dir / f"common_chest{image_ext}"
@@ -241,6 +241,7 @@ emblem_of_valor_path = image_dir / f"emblem_of_valor{image_ext}"
 emblem_of_brotherhood_path = image_dir / f"emblem_of_brotherhood{image_ext}"
 
 battle_pass_path = image_dir / f"battle_pass{image_ext}"
+
 
 def locateAllOnScreen(path, confidence=0.9):
     return p.locateAllOnScreen(str(path), confidence=confidence)
@@ -747,14 +748,17 @@ def do_map_mission(mission_path, mission_type, confidence=0.7):
         click_on_location(location)
         time.sleep(0.5)
         already_sleeped = 0
+        mission_started = False
         
         try:
             click_on_image(free_orange_path)
             missions_started += 1
+            mission_started = True
         except ImageNotFoundException:
             try:
                 click_on_image(start_path)
                 missions_started += 1
+                mission_started = True
             except ImageNotFoundException:
                 logger.debug(f"Failed to start the {mission_type} mission")
                 p.press("esc")
@@ -773,6 +777,9 @@ def do_map_mission(mission_path, mission_type, confidence=0.7):
         else:
             time.sleep(2)
             p.press("esc")
+        
+        if not locateOnScreen(map_squad_available_path):
+            return None
         
         time.sleep(1 - already_sleeped)
     
@@ -810,61 +817,81 @@ def do_map(main_screen, arg_is_fire, do_prestige, repeat=True):
     
     i = 0
     
-    while True:
+    for _ in range(100):
         try:
             click_on_image(claim_map_path, confidence=0.8)
         except ImageNotFoundException:
+            if i:
+                time.sleep(1)
+                p.press("esc")
+                move_random_around_home()
             break
         
         i += 1
-        
-        time.sleep(1)
-        p.press("esc")
-        move_random_around_home()
         time.sleep(0.5)
     
-    if i:
-        logger.info(f"{i} map loots claimed")
+    if not locateOnScreen(map_squad_available_path):
+        return main_screen
     
     time.sleep(2)
     
     done = bool(i)
-    done = do_map_mission(map_mission_cave_path, "cave") or done
-    done = do_map_mission(map_mission_naval_path, "naval") or done
-    done = do_map_mission(map_mission_monster_path, "monster") or done
-    done = do_map_mission(map_mission_dragon_path, "dragon") or done
-    done = do_map_mission(map_mission_scout_path, "scout") or done
-    done = do_map_mission(map_mission_war_path, "war", confidence=0.65) or done
+    done2 = do_map_mission(map_mission_cave_path, "cave")
     
-    done = do_map_mission(
+    if done2 is None:
+        return main_screen
+    
+    done = done2 or done
+    
+    done2 = do_map_mission(map_mission_naval_path, "naval")
+    
+    if done2 is None:
+        return main_screen
+    
+    done = done2 or done
+    
+    done2 = do_map_mission(map_mission_monster_path, "monster")
+    
+    if done2 is None:
+        return main_screen
+    
+    done = done2 or done
+    
+    done2 = do_map_mission(map_mission_dragon_path, "dragon")
+    
+    if done2 is None:
+        return main_screen
+    
+    done = done2 or done
+    
+    done2 = do_map_mission(map_mission_scout_path, "scout")
+    
+    if done2 is None:
+        return main_screen
+    
+    done = done2 or done
+    
+    done2 = do_map_mission(map_mission_war_path, "war", confidence=0.65)
+    
+    if done2 is None:
+        return main_screen
+    
+    done = done2 or done
+    
+    
+    done2 = do_map_mission(
         map_mission_adventure_path, 
         "adventure", 
         confidence=0.65
-    ) or done
+    )
+    
+    if done2 is None:
+        return main_screen
+    
+    done = done2 or done
     
     if not done:
-        extra_msg = ""
-        
-        if repeat:
-            extra_msg = ", trying again"
-        
-        logger.error(f"Unable to start or claim any map mission{extra_msg}")
-        
-        if repeat:
-            p.moveTo(map_x, map_y)
-            dragTo(map_x, map_y - map_delta_y)
-            time.sleep(0.5)
-            
-            main_screen = do_map(
-                main_screen, 
-                arg_is_fire, 
-                do_prestige, 
-                repeat=False
-            )
-        else:
-            p.moveTo(map_x, map_y)
-            dragTo(map_x, map_y + map_delta_y)
-            time.sleep(0.5)
+        logger.error("Unable to start or claim any map mission")
     
     return main_screen
 
@@ -1075,20 +1102,12 @@ def do_oracle(main_screen, arg_is_fire, do_prestige):
         return main_screen
     else:
         main_screen = False
-
-    time.sleep(0.5)
-    
-    try:
-        click_on_image(rituals_path)
-    except ImageNotFoundException:
-        logger.debug("Failed to find rituals")
-        return main_screen
     
     time.sleep(0.5)
     claimed = True
     
     try:
-        click_on_image(claim_dark_green_3_path, all=True, confidence=0.94)
+        click_on_image(claim_dark_green_3_path, confidence=0.94)
     except ImageNotFoundException:
         claimed = False
     
@@ -1112,7 +1131,7 @@ def do_oracle(main_screen, arg_is_fire, do_prestige):
 
 
 
-train_free_path_confidence = 0.9
+train_free_path_confidence = 0.8
 
 
 
@@ -1120,14 +1139,14 @@ def do_guardian_specific(
     guardian_path, 
     guardian_num, 
     guardian_level, 
-    confidence=0.9
+    confidence=0.8
 ):
         try:
             click_on_image(guardian_path, confidence=confidence)
-        except ImageNotFoundException:
+        except ImageNotFoundException as e:
             logger.debug(
                 f"Unable to find guardian {guardian_num} " + 
-                f"level {guardian_level}"
+                f"level {guardian_level}."
             )
             
             return None
@@ -1169,7 +1188,8 @@ def do_guardians_type(level, data):
         if done:
             return True
         
-        guardian_not_found = guardian_not_found and done is None
+        if done is not None:
+            guardian_not_found = False
     
     if guardian_not_found:
         logger.error(f"Guardian of level {level} not found")
@@ -1213,11 +1233,6 @@ def do_guardian(main_screen, arg_is_fire, do_prestige):
     try:
         click_on_image(train_free_path, confidence=train_free_path_confidence)
     except ImageNotFoundException:
-        done = do_guardians_type(1, ((guardian_1_5_path, 5, 0.7),))
-        
-        if done:
-            return main_screen
-        
         done = do_guardians_type(2, ((guardian_2_5_path, 5, None),))
         
         if done:
@@ -1230,6 +1245,11 @@ def do_guardian(main_screen, arg_is_fire, do_prestige):
             (guardian_3_2_path, 2, 0.7),
             (guardian_3_1_path, 1, None),
         ))
+        
+        if done:
+            return main_screen
+        
+        done = do_guardians_type(1, ((guardian_1_5_path, 5, 0.7),))
         
         if done:
             return main_screen
@@ -1420,18 +1440,18 @@ def hit_chaos(main_screen, arg_is_fire, do_prestige):
         main_screen = False
         
         
-    time.sleep(1.5)
+    time.sleep(2.5)
     
     
     hits = 0
 
     for _ in range(100):
         try:
-            click_on_image(chaos_hit_path, confidence=0.8)
+            click_on_image(chaos_hit_path)
         except ImageNotFoundException:
             break
         
-        if not locateOnScreen(manual_path):
+        if not locateOnScreen(manual_chaos_path):
             break
         
         time.sleep(5)
@@ -1525,7 +1545,7 @@ def prestige(main_screen, arg_is_fire, do_prestige):
     time.sleep(2)
     
     for _ in range(100):
-        if locateOnScreen(upgrade_max_path, confidence=0.8):
+        if locateOnScreen(upgrade_max_path, confidence=0.77):
             logger.debug("Max heroes upgrade multiplier found")
             break
         
@@ -1559,6 +1579,9 @@ def prestige(main_screen, arg_is_fire, do_prestige):
                 time.sleep(0.2)
             
             logger.debug(f"Upgraded heroes")
+    
+    if not locateOnScreen(boss_path):
+        return main_screen
     
     try:
         click_on_image(firestone_advice_path)
@@ -1665,10 +1688,9 @@ def open_chests(main_screen, arg_is_fire, do_prestige):
     time.sleep(wait_time_bag_opened)
     
     try:
-        click_on_image(treasure_tab_path, confidence=0.8)
+        click_on_image(treasure_tab_path)
     except ImageNotFoundException:
         logger.error("Unable to find treasure tab in the bag")
-        return main_screen
     
     main_screen = open_chest(
         common_chest_path, 
@@ -1928,7 +1950,7 @@ def do_battle_pass(main_screen, arg_is_fire, do_prestige):
     main_screen = get_main_screen(main_screen, arg_is_fire, do_prestige)
     
     try:
-        click_on_image(battle_pass_path, confidence=0.95)
+        click_on_image(battle_pass_path, confidence=0.905)
     except ImageNotFoundException:
         logger.debug("No battle pass advice")
         return main_screen
@@ -2027,102 +2049,114 @@ def check(
     main_screen = do_map(main_screen, arg_is_fire, do_prestige)
     main_screen = hit_chaos(main_screen, arg_is_fire, do_prestige)
     
-    if first_time:
-        main_screen = open_chests(main_screen, arg_is_fire, do_prestige)
-        main_screen = spend_emblems(main_screen, arg_is_fire, do_prestige)
-    
-
-    main_screen = do_battle_pass(main_screen, arg_is_fire, do_prestige)    
-    main_screen = do_machine(main_screen, arg_is_fire, do_prestige)
-    main_screen = do_arena(main_screen, arg_is_fire, do_prestige)
-    main_screen = awake(main_screen, arg_is_fire, do_prestige)
-    
     if events and first_time:
         main_screen = do_event(main_screen, arg_is_fire, do_prestige)
     
     if do_prestige and first_time:
         main_screen = prestige(main_screen, arg_is_fire, do_prestige)
     
+    if first_time:
+        main_screen = spend_emblems(main_screen, arg_is_fire, do_prestige)
+        main_screen = open_chests(main_screen, arg_is_fire, do_prestige)
+    
+
+    main_screen = do_battle_pass(main_screen, arg_is_fire, do_prestige)
+    main_screen = do_machine(main_screen, arg_is_fire, do_prestige)
+    main_screen = do_machine(main_screen, arg_is_fire, do_prestige)
+    main_screen = do_arena(main_screen, arg_is_fire, do_prestige)
+    main_screen = awake(main_screen, arg_is_fire, do_prestige)
+    
     main_screen = get_main_screen(main_screen, arg_is_fire, do_prestige)
     
     return main_screen
 
 
+parser = argparse.ArgumentParser(
+    prog='firestone.py',
+    description='Automates the Firestone idle game',
+)
+
+parser.add_argument(
+    "command",
+    choices=("fire", "pre"),
+    nargs="?",
+    help="Make the guardian attack. 'pre' is equivalent to 'fire -p'",
+)
+
+parser.add_argument(
+    "-p", 
+    "--prestige", 
+    action="store_true", 
+    help="Enables auto-upgrade of heroes and auto-prestige"
+)
+
+parser.add_argument(
+    "-k", 
+    "--decorated", 
+    action="store_true", 
+    help="Equivalent of -t -e -d, or -ted"
+)
+
+parser.add_argument(
+    "-d", 
+    "--spend-dust", 
+    action="store_true", 
+    help="Enables the auto-clicking on dust researches in Alchemist"
+)
+
+parser.add_argument(
+    "-t", 
+    "--no-tavern", 
+    action="store_true", 
+    help="Disables auto-clicking on the Tavern"
+)
+
+parser.add_argument(
+    "-e", 
+    "--events", 
+    action="store_true", 
+    help="Enables auto-clicking on the Events (for now only Decorated Heroes)"
+)
+
+
+p.keyDown("alt")
+time.sleep(0.2)
+p.press("tab")
+time.sleep(0.2)
+p.keyUp("alt")
+
+time.sleep(0.5)
+
+wait_sec_pickaxes = 5737
+safe_delta_sec = 300
+
 
 def main():
-    parser = argparse.ArgumentParser(
-        prog='firestone.py',
-        description='Automates the Firestone idle game',
-    )
-
-    parser.add_argument(
-        "command",
-        choices=("fire", "pre"),
-        nargs="?",
-        help="Make the guardian attack. 'pre' is equivalent to 'fire -p'",
-    )
-
-    parser.add_argument(
-        "-d", 
-        "--spend-dust", 
-        action="store_true", 
-        help="Enables the auto-clicking on dust researches in Alchemist"
-    )
-
-    parser.add_argument(
-        "-t", 
-        "--no-tavern", 
-        action="store_true", 
-        help="Disables auto-clicking on the Tavern"
-    )
-
-    parser.add_argument(
-        "-e", 
-        "--events", 
-        action="store_true", 
-        help="Enables auto-clicking on the Events (for now only Decorated Heroes)"
-    )
-
-    parser.add_argument(
-        "-p", 
-        "--prestige", 
-        action="store_true", 
-        help="Enables auto-upgrade of heroes and auto-prestige"
-    )
-    
+    p.FAILSAFE = True
     args = parser.parse_args()
-
-    main_screen = is_main_screen()
-
-    p.keyDown("alt")
-    time.sleep(0.2)
-    p.press("tab")
-    time.sleep(0.2)
-    p.keyUp("alt")
-
-    time.sleep(0.5)
-    
     arg_is_fire = False
     spend_dust = args.spend_dust
     no_tavern = args.no_tavern
     events = args.events
     do_prestige = args.prestige
-    
+    decorated = args.decorated
+
     if args.command == "fire":
         arg_is_fire = True
     elif args.command == "pre":
         arg_is_fire = True
         do_prestige = True
-    
+
+    if decorated:
+        no_tavern = True
+        events = True
+        spend_dust = True
+
     wait_sec = 100 if arg_is_fire else 3
-    wait_sec_pickaxes = 5737
-
-    now = time.time()
-    prev_time = 0
+    prev_time_safe = time.time()
     prev_time_pickaxes = 0
-    prev_time_safe = now
-    safe_delta_sec = 300
-
+    prev_time = 0
+    main_screen = is_main_screen()
     
     while True:
         if time.time() - prev_time_safe >= safe_delta_sec:
@@ -2133,7 +2167,6 @@ def main():
             )
             
             prev_time_safe = time.time()
-            
         
         if time.time() - prev_time_pickaxes >= wait_sec_pickaxes:
             main_screen = get_pickaxes(main_screen, arg_is_fire, do_prestige)
@@ -2199,8 +2232,16 @@ def main():
             p.click(interval=0.4)
             press_power(do_prestige, main_screen_real)
 
+
 if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
         pass
+    except FailSafeException:
+        try:
+            p.FAILSAFE = False
+            move_random_around_home()
+            main()
+        except KeyboardInterrupt:
+            pass
