@@ -1,6 +1,12 @@
 # firestone_autoclicker
 
-Features:
+## IMPORTANT NOTE
+I do not maintain anymore this script.  
+Feel free to open an issue, but I will not fix anything, I can say you what to do to make it working. I also accept PRs.  
+You can clone the repo, of course, or ask me the ownership of the repo.  
+For more info, read here: https://github.com/Marco-Sulla/firestone_autoclicker/issues/4
+
+## Features:
 * claim and starts the firestone researches
 * claims and starts alchemist researches (dust ones disabled by default)
 * does map missions
